@@ -1,0 +1,29 @@
+{
+  "name": "apk-downloader",
+  "version": "1.0.2",
+  "description": "This npm package is used to download google playstore applications.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2016508006/apk-downloader.git"
+  },
+  "keywords": [
+    "apk-downloader",
+    "playstore"
+  ],
+  "author": "Aswin Venkat",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/2016508006/apk-downloader/issues"
+  },
+  "homepage": "https://github.com/2016508006/apk-downloader#readme",
+  "dependencies": {
+    "fs": "0.0.1-security",
+    "path": "^0.12.7",
+    "puppeteer": "^5.4.0",
+    "request": "^2.88.2"
+  }
+}
