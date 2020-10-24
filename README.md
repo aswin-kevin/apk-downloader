@@ -7,6 +7,7 @@ npm i apk-downloader
 ## example code snippet
 
 const downloader = require("apk-downloader")
+
 downloader.downloadAPK("com.microbees.floatingapp") // change this package name
 
 ## output
