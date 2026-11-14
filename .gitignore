@@ -1,0 +1,9 @@
+node_modules/
+dist/
+coverage/
+*.tgz
+*.apk
+*.xapk
+*.part
+.superpowers/
+.DS_Store
