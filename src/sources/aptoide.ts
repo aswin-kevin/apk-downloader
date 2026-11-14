@@ -117,7 +117,14 @@ export function createAptoideSource(options: AptoideSourceOptions = {}): Source 
     opts: LookupOptions,
   ): Promise<AptoideApp> {
     const body = await call(`${baseUrl}/app/getMeta?${query}`, packageName, opts);
-    return validate(body.data);
+    const app = validate(body.data);
+    if (app.package !== packageName) {
+      throw new SourceUnavailableError(
+        `Aptoide answered with ${String(app.package)} instead of ${packageName}`,
+        { source: ID, reason: 'package-mismatch' },
+      );
+    }
+    return app;
   }
 
   async function getVersionList(packageName: string, opts: LookupOptions): Promise<AptoideApp[]> {

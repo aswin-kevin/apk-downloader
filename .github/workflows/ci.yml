@@ -46,7 +46,16 @@ jobs:
       - run: npm test
       - run: npm run build
 
-      - name: Smoke-test the packed CLI
+      - name: Check package contents
+        run: npm run check:pack
+
+      - name: Install the packed tarball and run it
         run: |
-          npm pack
-          node bin/apk-downloader.js --version
+          npm pack --ignore-scripts
+          mkdir "$RUNNER_TEMP/consumer"
+          cd "$RUNNER_TEMP/consumer"
+          npm init -y > /dev/null
+          npm install --ignore-scripts --no-audit --no-fund "$GITHUB_WORKSPACE"/apk-downloader-*.tgz
+          npx --no-install apk-downloader --version
+          node -e "require('apk-downloader')"
+          node --input-type=module -e "import 'apk-downloader'"

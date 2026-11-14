@@ -121,11 +121,17 @@ export interface Progress {
 }
 
 export interface ClientOptions {
-  /** Download sources in fallback order: built-in ids or custom `Source` objects. Default `['apkpure', 'aptoide']`. */
+  /**
+   * Download sources in fallback order: built-in ids or custom `Source` objects.
+   * Default `['aptoide', 'apkpure', 'fdroid']`.
+   */
   sources?: Array<string | Source>;
-  /** Sources used by `getInfo` / `listVersions`, in order. Default `['aptoide', 'apkpure']`. */
+  /**
+   * Sources used by `getInfo` / `listVersions`, in order. Defaults to `sources` when that is set,
+   * otherwise `['aptoide', 'fdroid', 'apkpure']`.
+   */
   infoSources?: Array<string | Source>;
-  /** Per-request timeout in ms (also the download idle timeout). Default `30000`. */
+  /** Per-request timeout in ms; also how long a download may stall before it fails. Default `30000`. */
   timeout?: number;
   /** Retries for transient failures. Default `3`. */
   retries?: number;

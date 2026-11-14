@@ -76,6 +76,7 @@ export class ApkDownloader {
   private readonly downloadOrder: string[];
   private readonly infoOrder: string[];
   private readonly http: HttpClient;
+  private readonly timeout: number;
 
   constructor(options: ClientOptions = {}) {
     this.downloadOrder = this.register(options.sources ?? DEFAULT_SOURCES, 'sources');
@@ -83,8 +84,9 @@ export class ApkDownloader {
       options.infoSources ?? (options.sources ? options.sources : DEFAULT_INFO_SOURCES),
       'infoSources',
     );
+    this.timeout = options.timeout ?? DEFAULT_TIMEOUT_MS;
     this.http = new HttpClient({
-      timeout: options.timeout ?? DEFAULT_TIMEOUT_MS,
+      timeout: this.timeout,
       retries: options.retries ?? DEFAULT_RETRIES,
       userAgent: options.userAgent ?? DEFAULT_USER_AGENT,
       proxy: options.proxy,
@@ -248,6 +250,7 @@ export class ApkDownloader {
       verify: options.verify ?? true,
       signal: options.signal,
       onProgress: options.onProgress,
+      idleTimeout: this.timeout,
     });
 
     const downloaded = result(packageName, filePath, resolved, size, sha256, false);

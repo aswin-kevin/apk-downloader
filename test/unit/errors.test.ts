@@ -6,6 +6,7 @@ import {
   AppNotFoundError,
   ChecksumMismatchError,
   FileExistsError,
+  FileSystemError,
   InvalidArchiveError,
   InvalidOptionError,
   InvalidPackageError,
@@ -39,6 +40,7 @@ describe('errors', () => {
     [new InvalidOptionError('bad'), 'ERR_INVALID_OPTION', 'InvalidOptionError'],
     [new InvalidArchiveError('bad zip'), 'ERR_INVALID_ARCHIVE', 'InvalidArchiveError'],
     [new UnsafeArchiveError('../x'), 'ERR_UNSAFE_ARCHIVE', 'UnsafeArchiveError'],
+    [new FileSystemError('disk full'), 'ERR_FS', 'FileSystemError'],
   ];
 
   it.each(cases)('%s has code %s and name %s', (err, code, name) => {

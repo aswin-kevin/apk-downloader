@@ -1,5 +1,5 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -10,9 +10,11 @@ import {
   AppNotFoundError,
   ChecksumMismatchError,
   FileExistsError,
+  FileSystemError,
   InvalidOptionError,
   InvalidPackageError,
   SourceUnavailableError,
+  TimeoutError,
   VersionNotFoundError,
 } from '../../src/errors.js';
 import { builtinSources, DEFAULT_INFO_SOURCES, DEFAULT_SOURCES } from '../../src/sources/index.js';
@@ -282,6 +284,61 @@ describe('ApkDownloader.download', () => {
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ChecksumMismatchError);
     expect(second.calls).toHaveLength(0);
+  });
+
+  it('a local filesystem error stops without blaming or retrying other sources', async () => {
+    const notADir = path.join(dir, 'file-not-dir');
+    await writeFile(notADir, 'x');
+    const second = fakeSource('second');
+    const err = await client([fakeSource('one'), second])
+      .download(PKG, { outDir: path.join(notADir, 'sub') })
+      .catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(FileSystemError);
+    expect((err as FileSystemError).code).toBe('ERR_FS');
+    expect(second.calls).toHaveLength(0);
+  });
+
+  it('an unwritable output directory is a FileSystemError, not a network error', async () => {
+    const readOnly = path.join(dir, 'ro');
+    await mkdir(readOnly);
+    await chmod(readOnly, 0o500);
+    const second = fakeSource('second');
+    try {
+      const err = await client([fakeSource('one'), second])
+        .download(PKG, { outDir: readOnly })
+        .catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(FileSystemError);
+      expect(second.calls).toHaveLength(0);
+      expect(fileHits).toHaveLength(1);
+    } finally {
+      await chmod(readOnly, 0o700);
+    }
+  });
+
+  it('the client timeout also detects a stalled transfer', async () => {
+    const stalled = await startServer((_req, res) => {
+      res.setHeader('content-length', String(APK.length));
+      res.write(APK.subarray(0, 1000)); // then never finish
+    });
+    try {
+      const source: Source = {
+        ...fakeSource('one'),
+        resolve: async (pkg) => ({
+          source: 'one',
+          url: `${stalled.url}/x.apk`,
+          format: 'apk',
+          info: { packageName: pkg, source: 'one' },
+        }),
+      };
+      const started = Date.now();
+      const err = await new ApkDownloader({ sources: [source], timeout: 300, retries: 0 })
+        .download(PKG, { outDir: dir, source: 'one' })
+        .catch((e: unknown) => e);
+      expect(err).toBeInstanceOf(TimeoutError);
+      expect(Date.now() - started).toBeLessThan(5000);
+    } finally {
+      await stalled.close();
+    }
   });
 
   it('abort stops immediately with AbortError', async () => {

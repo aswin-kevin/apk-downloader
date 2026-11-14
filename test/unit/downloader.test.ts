@@ -2,6 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { gzipSync } from 'node:zlib';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { downloadToFile } from '../../src/download/downloader.js';
 import {
@@ -189,6 +190,81 @@ describe('downloadToFile', () => {
     expect((err as SourceUnavailableError).reason).toBe('not-an-apk');
     expect((err as SourceUnavailableError).source).toBe('test');
     expect(await listDir()).toEqual([]);
+  });
+
+  it('rejects a text/html response before writing anything', async () => {
+    server = await serve(APK, { contentType: 'text/html; charset=utf-8' });
+    const err = await downloadToFile({
+      http,
+      resolved: resolved(server.url),
+      target: path.join(dir, 'app.apk'),
+      verify: true,
+    }).catch((e: unknown) => e);
+    expect((err as SourceUnavailableError).reason).toBe('not-an-apk');
+    expect(await listDir()).toEqual([]);
+  });
+
+  it('asks for an unencoded body and still accepts a gzip-encoded transfer', async () => {
+    const gz = gzipSync(APK);
+    server = await startServer((_req, res) => {
+      res.writeHead(200, { 'content-encoding': 'gzip', 'content-length': String(gz.length) });
+      res.end(gz);
+    });
+    const result = await downloadToFile({
+      http,
+      resolved: resolved(server.url, { size: APK.length }),
+      target: path.join(dir, 'app.apk'),
+      verify: true,
+    });
+    expect(result).toEqual({ size: APK.length, sha256: SHA256 });
+    expect(server.requests[0]?.headers['accept-encoding']).toBe('identity');
+  });
+
+  it('a stale size from the source does not reject a file whose checksum matches', async () => {
+    server = await serve(APK, { chunked: true });
+    const result = await downloadToFile({
+      http,
+      resolved: resolved(server.url, {
+        size: APK.length + 123,
+        checksum: { algorithm: 'md5', value: MD5 },
+      }),
+      target: path.join(dir, 'app.apk'),
+      verify: true,
+    });
+    expect(result.sha256).toBe(SHA256);
+  });
+
+  it('refuses an https download that was redirected to plain http', async () => {
+    const respondFrom = (finalUrl: string) =>
+      new HttpClient({
+        timeout: 2000,
+        retries: 0,
+        userAgent: 'test',
+        fetch: async () => {
+          const response = new Response(APK, { status: 200 });
+          Object.defineProperty(response, 'url', { value: finalUrl });
+          return response;
+        },
+      });
+
+    const err = await downloadToFile({
+      http: respondFrom('http://mirror.example.com/app.apk'),
+      resolved: resolved('https://cdn.example.com/app.apk'),
+      target: path.join(dir, 'app.apk'),
+      verify: true,
+    }).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(SourceUnavailableError);
+    expect((err as SourceUnavailableError).reason).toBe('insecure-redirect');
+    expect(await listDir()).toEqual([]);
+
+    await expect(
+      downloadToFile({
+        http: respondFrom('https://mirror.example.com/app.apk'),
+        resolved: resolved('https://cdn.example.com/app.apk'),
+        target: path.join(dir, 'app.apk'),
+        verify: true,
+      }),
+    ).resolves.toMatchObject({ sha256: SHA256 });
   });
 
   it('rejects an empty body', async () => {

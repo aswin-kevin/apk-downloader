@@ -4,6 +4,7 @@ import path from 'node:path';
 import { pipeline } from 'node:stream/promises';
 import type { Entry, ZipFile } from 'yauzl';
 import { InvalidArchiveError, UnsafeArchiveError } from '../errors.js';
+import { asFileSystemError } from '../util/fs-error.js';
 
 /** Messages yauzl uses when it rejects a file name for path-safety reasons. */
 const YAUZL_UNSAFE_NAME = /invalid relative path|absolute path|invalid characters in fileName/i;
@@ -37,6 +38,8 @@ export async function extractXapk(file: string, destDir: string): Promise<string
   } catch (error) {
     await Promise.all(written.map((f) => rm(f, { force: true }).catch(() => {})));
     if (error instanceof InvalidArchiveError || error instanceof UnsafeArchiveError) throw error;
+    const fsError = asFileSystemError(error);
+    if (fsError !== error) throw fsError;
     const message = error instanceof Error ? error.message : String(error);
     throw new InvalidArchiveError(`Cannot extract ${path.basename(file)}: ${message}`, {
       cause: error,

@@ -239,6 +239,18 @@ describe('aptoide source', () => {
     );
   });
 
+  it('refuses a response describing a different package', async () => {
+    const other = structuredClone(meta) as { data: { package: string } };
+    other.data.package = 'com.other.app';
+    const http = fakeHttp([['getMeta', { json: other }]]);
+    const err = await aptoide.resolve(PKG, opts(http)).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(SourceUnavailableError);
+    expect((err as SourceUnavailableError).reason).toBe('package-mismatch');
+    await expect(aptoide.getInfo(PKG, { http })).rejects.toMatchObject({
+      reason: 'package-mismatch',
+    });
+  });
+
   it('URL-encodes the package name', async () => {
     const http = fakeHttp([['getMeta', { status: 404, json: notFound }]]);
     await aptoide.getInfo('a.b&x=1', { http }).catch(() => {});

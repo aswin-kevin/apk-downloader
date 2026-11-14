@@ -138,6 +138,25 @@ export class AbortError extends ApkDownloaderError {
   }
 }
 
+/**
+ * A local filesystem operation failed (unwritable directory, disk full, ...).
+ * Never triggers fallback: another source would hit the same local problem.
+ */
+export class FileSystemError extends ApkDownloaderError {
+  readonly path?: string;
+  /** The underlying Node.js error code, e.g. `ENOSPC`, `EACCES`. */
+  readonly systemCode?: string;
+
+  constructor(
+    message: string,
+    details: ErrorDetails & { path?: string; systemCode?: string } = {},
+  ) {
+    super(message, 'ERR_FS', details);
+    if (details.path !== undefined) this.path = details.path;
+    if (details.systemCode !== undefined) this.systemCode = details.systemCode;
+  }
+}
+
 /** An XAPK archive is corrupt or does not contain any APK. */
 export class InvalidArchiveError extends ApkDownloaderError {
   constructor(message: string, details: ErrorDetails = {}) {

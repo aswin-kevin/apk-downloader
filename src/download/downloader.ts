@@ -14,6 +14,7 @@ import {
   TimeoutError,
 } from '../errors.js';
 import type { Http, Progress, ResolvedDownload } from '../types.js';
+import { asFileSystemError } from '../util/fs-error.js';
 
 /** APK and XAPK files are ZIP archives: they start with a local file header. */
 const ZIP_MAGIC = Buffer.from([0x50, 0x4b, 0x03, 0x04]);
@@ -49,7 +50,6 @@ export async function downloadToFile(args: DownloadToFileArgs): Promise<Download
   const { http, resolved, target, verify, signal, onProgress } = args;
   const idleTimeout = args.idleTimeout ?? DEFAULT_IDLE_TIMEOUT_MS;
 
-  await mkdir(path.dirname(target), { recursive: true });
   const partPath = `${target}.${randomBytes(4).toString('hex')}.part`;
 
   const idle = new AbortController();
@@ -69,13 +69,27 @@ export async function downloadToFile(args: DownloadToFileArgs): Promise<Download
   const combined = signal ? AbortSignal.any([signal, idle.signal]) : idle.signal;
 
   try {
+    await mkdir(path.dirname(target), { recursive: true });
     touch();
     const response = await http.request(resolved.url, {
       timeout: false,
       signal: combined,
-      ...(resolved.headers ? { headers: resolved.headers } : {}),
+      // Ask for the raw bytes: with a transfer encoding, content-length would not match the file.
+      headers: { 'accept-encoding': 'identity', ...resolved.headers },
     });
 
+    // Never let a redirect downgrade an https download to plain http (integrity relies on TLS
+    // whenever the source publishes no checksum).
+    if (isDowngrade(resolved.url, response.url)) {
+      await response.body?.cancel().catch(() => {});
+      throw new SourceUnavailableError(
+        `${resolved.source} redirected an https download to plain http`,
+        {
+          source: resolved.source,
+          reason: 'insecure-redirect',
+        },
+      );
+    }
     if (!response.ok || !response.body) {
       await response.body?.cancel().catch(() => {});
       throw new NetworkError(`HTTP ${response.status} while downloading ${resolved.url}`, {
@@ -89,16 +103,25 @@ export async function downloadToFile(args: DownloadToFileArgs): Promise<Download
       throw notAnApk(resolved);
     }
 
+    // content-length describes the file only when the body is not content-encoded.
+    const encoding = response.headers.get('content-encoding');
     const headerLength = Number(response.headers.get('content-length'));
-    const expectedSize =
-      Number.isSafeInteger(headerLength) && headerLength > 0 ? headerLength : resolved.size;
+    const transportSize =
+      (!encoding || encoding === 'identity') &&
+      Number.isSafeInteger(headerLength) &&
+      headerLength > 0
+        ? headerLength
+        : undefined;
+    const willVerifyChecksum = verify && resolved.checksum !== undefined;
+    // The size a source reports can be stale; a checksum is the stronger check when there is one.
+    const expectedSize = transportSize ?? (willVerifyChecksum ? undefined : resolved.size);
 
     const inspector = new Inspector({
       extraAlgorithm:
         verify && resolved.checksum?.algorithm !== 'sha256'
           ? resolved.checksum?.algorithm
           : undefined,
-      total: expectedSize,
+      total: transportSize ?? resolved.size,
       onChunk: touch,
       onProgress,
       resolved,
@@ -234,6 +257,15 @@ function notAnApk(resolved: ResolvedDownload): SourceUnavailableError {
   );
 }
 
+function isDowngrade(requested: string, final: string): boolean {
+  if (!final) return false;
+  try {
+    return new URL(requested).protocol === 'https:' && new URL(final).protocol !== 'https:';
+  } catch {
+    return false;
+  }
+}
+
 function normalizeError(
   error: unknown,
   ctx: { signal: AbortSignal | undefined; idle: AbortSignal; resolved: ResolvedDownload },
@@ -243,6 +275,8 @@ function normalizeError(
   }
   if (ctx.idle.aborted && ctx.idle.reason instanceof TimeoutError) return ctx.idle.reason;
   if (error instanceof ApkDownloaderError) return error;
+  const fsError = asFileSystemError(error);
+  if (fsError instanceof ApkDownloaderError) return fsError;
   const message = error instanceof Error ? error.message : String(error);
   return new NetworkError(`Download failed: ${message}`, {
     url: ctx.resolved.url,
