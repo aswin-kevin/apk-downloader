@@ -1,0 +1,1 @@
+{"info":{"status":"FAIL","time":{"seconds":0.12400603294372559,"human":"124 milliseconds"}},"errors":[{"code":"APP-1","description":"Application 'package:com.nonexistent.zzzz' not found","details":{}}]}

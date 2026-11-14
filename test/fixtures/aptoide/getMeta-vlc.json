@@ -1,0 +1,106 @@
+{
+  "info": {
+    "status": "OK",
+    "time": {
+      "seconds": 0.06310296058654785,
+      "human": "63 milliseconds"
+    }
+  },
+  "data": {
+    "id": 18835772,
+    "name": "VLC for Android",
+    "package": "org.videolan.vlc",
+    "size": 17762455,
+    "icon": "https://pool.img.aptoide.com/mark8/42ead380c70ce272e5c6ab770724b9b2_icon.png",
+    "added": "2015-02-04 22:47:46",
+    "modified": "2016-05-04 15:06:52",
+    "updated": "2026-11-12 22:55:47",
+    "developer": {
+      "id": 76853,
+      "name": "Videolabs",
+      "website": "http://www.videolan.org"
+    },
+    "store": {
+      "id": 65518,
+      "name": "mark8"
+    },
+    "file": {
+      "vername": "1.9.9",
+      "vercode": 21090905,
+      "md5sum": "6829e4ed025f7d87df45fa91c868ab97",
+      "filesize": 17762455,
+      "signature": {
+        "sha1": "EE:FB:C9:81:42:83:43:BB:DD:FF:F6:B2:3B:6B:D8:71:73:51:41:0C",
+        "owner": "CN=Jean-Baptiste Kempf, O=VideoLAN Mobile, L=Paris, C=FR"
+      },
+      "added": "2016-05-04 15:06:52",
+      "path": "https://pool.apk.aptoide.com/mark8/org-videolan-vlc-21090905-18835772-6829e4ed025f7d87df45fa91c868ab97.apk",
+      "path_alt": "https://pool.apk.aptoide.com/mark8/org-videolan-vlc-21090905-18835772-6829e4ed025f7d87df45fa91c868ab97.apk",
+      "hardware": {
+        "sdk": 19,
+        "screen": "SMALL",
+        "gles": 0,
+        "cpus": [
+          "x86"
+        ],
+        "densities": [],
+        "dependencies": []
+      },
+      "malware": {
+        "rank": "TRUSTED",
+        "reason": {
+          "signature_validated": {
+            "date": "2025-12-06",
+            "status": "review"
+          },
+          "scanned": {
+            "status": "passed",
+            "date": "2020-05-29 15:18:27",
+            "av_info": [
+              {
+                "infections": [],
+                "name": "zoner 1.11.0"
+              },
+              {
+                "infections": [],
+                "name": "drweb 9.01.2"
+              },
+              {
+                "infections": [],
+                "name": "vipre 3.0.3.374"
+              },
+              {
+                "infections": [],
+                "name": "mcafee"
+              },
+              {
+                "infections": [],
+                "name": "trendmicro 7.0.0.1443"
+              },
+              {
+                "infections": [],
+                "name": "ikarus 1.7.38"
+              },
+              {
+                "infections": [],
+                "name": "sophos 6.0.1789"
+              },
+              {
+                "infections": [],
+                "name": "norton"
+              },
+              {
+                "infections": [],
+                "name": "fake_detector"
+              }
+            ]
+          }
+        },
+        "added": "2016-05-04 16:06:52",
+        "modified": "2026-11-06 09:35:39"
+      }
+    },
+    "aab": null,
+    "obb": null
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "info": {
+    "status": "OK",
+    "time": {
+      "seconds": 0.03625607490539551,
+      "human": "36 milliseconds"
+    }
+  },
+  "data": {
+    "id": 77466931,
+    "name": "Genshin Impact",
+    "package": "com.miHoYo.GenshinImpact",
+    "size": 3000530,
+    "icon": "https://pool.img.aptoide.com/gujjn54ytr/8b76eae1e7abd5ec90e6a56b34240324_icon.png",
+    "added": "2026-11-06 21:11:31",
+    "modified": "2026-11-06 21:11:31",
+    "updated": "2026-11-06 21:11:31",
+    "developer": {
+      "id": 238121,
+      "name": "miHoYo Limited",
+      "website": "https://genshin.hoyoverse.com/"
+    },
+    "store": {
+      "id": 3913317,
+      "name": "gujjn54ytr"
+    },
+    "file": {
+      "vername": "1013.0-wv",
+      "vercode": 1013,
+      "md5sum": "b76edd9168c4dc835544b52941606834",
+      "filesize": 3000530,
+      "signature": {
+        "sha1": "54:13:0B:F6:49:D1:DC:B0:F8:CC:65:06:B6:FD:4C:DE:A3:64:4D:34",
+        "owner": "ST=y5KTr4CNdZ2h, L=y5KTr4CNdZ2h, O=y5KTr4CNdZ2h, OU=y5KTr4CNdZ2h, CN=y5KTr4CNdZ2h"
+      },
+      "added": "2026-11-06 21:11:31",
+      "path": "https://pool.apk.aptoide.com/gujjn54ytr/com-mihoyo-genshinimpact-1013-77466931-b76edd9168c4dc835544b52941606834.apk",
+      "path_alt": "https://pool.apk.aptoide.com/gujjn54ytr/com-mihoyo-genshinimpact-1013-77466931-b76edd9168c4dc835544b52941606834.apk",
+      "hardware": {
+        "sdk": 21,
+        "screen": "SMALL",
+        "gles": 0,
+        "cpus": [],
+        "densities": [],
+        "dependencies": []
+      },
+      "malware": {
+        "rank": "UNKNOWN",
+        "reason": {
+          "signature_validated": {
+            "date": "2026-11-06",
+            "status": "unknown",
+            "signature_from": "user"
+          }
+        },
+        "added": "2026-11-06 21:11:32",
+        "modified": "2026-11-06 21:11:32"
+      }
+    },
+    "aab": null,
+    "obb": null
+  }
+}

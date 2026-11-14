@@ -29,6 +29,8 @@ export interface AppInfo {
   minSdk?: number;
   architectures?: string[];
   signature?: { sha1?: string; owner?: string };
+  /** Trust/malware rating reported by the source (e.g. Aptoide's `TRUSTED`, `UNKNOWN`, `WARNING`, `CRITICAL`). */
+  trust?: string;
   /** Id of the source that produced this info. */
   source: string;
 }
@@ -39,6 +41,7 @@ export interface AppVersion {
   size?: number;
   /** When the source published this version (as reported by the source). */
   added?: string;
+  trust?: string;
 }
 
 /**
@@ -61,6 +64,11 @@ export interface ResolveOptions {
   /** A versionName, a versionCode (as string), or `'latest'`. */
   version: string;
   format: FormatOption;
+  /**
+   * Accept files the source does not consider trusted (Aptoide: `UNKNOWN` / `WARNING`).
+   * Files flagged as malicious are never accepted. Default `false`.
+   */
+  allowUntrusted?: boolean | undefined;
   signal?: AbortSignal | undefined;
   http: Http;
 }
@@ -145,6 +153,8 @@ export interface DownloadOptions {
   verify?: boolean;
   /** Use only this source (no fallback). */
   source?: string;
+  /** Accept files the source does not mark as trusted (never ones flagged as malicious). Default `false`. */
+  allowUntrusted?: boolean;
   signal?: AbortSignal;
   onProgress?: (progress: Progress) => void;
 }

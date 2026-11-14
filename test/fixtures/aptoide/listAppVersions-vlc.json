@@ -1,0 +1,116 @@
+{
+  "info": {
+    "status": "OK",
+    "time": {
+      "seconds": 0.14603304862976074,
+      "human": "146 milliseconds"
+    }
+  },
+  "list": [
+    {
+      "id": 18835772,
+      "name": "VLC for Android",
+      "package": "org.videolan.vlc",
+      "size": 17762455,
+      "icon": "https://pool.img.aptoide.com/mark8/42ead380c70ce272e5c6ab770724b9b2_icon.png",
+      "added": "2015-02-04 22:47:46",
+      "modified": "2016-05-04 15:06:52",
+      "updated": "2018-11-09 02:49:52",
+      "store": {
+        "id": 65518,
+        "name": "mark8"
+      },
+      "file": {
+        "vername": "1.9.9",
+        "vercode": 21090905,
+        "md5sum": "6829e4ed025f7d87df45fa91c868ab97",
+        "filesize": 17762455,
+        "added": "2016-05-04 15:06:52",
+        "malware": {
+          "rank": "TRUSTED"
+        },
+        "hardware": {
+          "sdk": 19,
+          "screen": "SMALL",
+          "gles": 0,
+          "cpus": [
+            "x86"
+          ],
+          "densities": [],
+          "dependencies": []
+        }
+      },
+      "obb": null
+    },
+    {
+      "id": 77186992,
+      "name": "VLC for Android",
+      "package": "org.videolan.vlc",
+      "size": 49645764,
+      "icon": "https://pool.img.aptoide.com/aplicationpaidprofree/42ead380c70ce272e5c6ab770724b9b2_icon.png",
+      "added": "2018-12-04 20:36:48",
+      "modified": "2026-10-20 10:06:29",
+      "updated": "2026-10-20 10:06:29",
+      "store": {
+        "id": 2360723,
+        "name": "aplicationpaidprofree"
+      },
+      "file": {
+        "vername": "3.7.2",
+        "vercode": 13070206,
+        "md5sum": "6d9e76e469d816e7d5e2529b1c2e0977",
+        "filesize": 49645764,
+        "added": "2026-10-20 10:06:29",
+        "malware": {
+          "rank": "TRUSTED"
+        },
+        "hardware": {
+          "sdk": 17,
+          "screen": "SMALL",
+          "gles": 0,
+          "cpus": [
+            "arm64-v8a"
+          ],
+          "densities": [],
+          "dependencies": []
+        }
+      },
+      "obb": null
+    },
+    {
+      "id": 77139186,
+      "name": "VLC for Android",
+      "package": "org.videolan.vlc",
+      "size": 49625284,
+      "icon": "https://pool.img.aptoide.com/aplicationpaidprofree/42ead380c70ce272e5c6ab770724b9b2_icon.png",
+      "added": "2018-12-04 20:36:48",
+      "modified": "2026-10-16 17:56:35",
+      "updated": "2026-10-20 10:06:29",
+      "store": {
+        "id": 2360723,
+        "name": "aplicationpaidprofree"
+      },
+      "file": {
+        "vername": "3.7.2 Beta 3",
+        "vercode": 13070136,
+        "md5sum": "b6bd9c33371332f788c204764b8ebd41",
+        "filesize": 49625284,
+        "added": "2026-10-16 17:56:35",
+        "malware": {
+          "rank": "TRUSTED"
+        },
+        "hardware": {
+          "sdk": 17,
+          "screen": "SMALL",
+          "gles": 0,
+          "cpus": [
+            "arm64-v8a"
+          ],
+          "densities": [],
+          "dependencies": []
+        }
+      },
+      "obb": null
+    }
+  ]
+}

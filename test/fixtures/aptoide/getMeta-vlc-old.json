@@ -1,0 +1,64 @@
+{
+  "info": {
+    "status": "OK",
+    "time": {
+      "seconds": 0.09909391403198242,
+      "human": "99 milliseconds"
+    }
+  },
+  "data": {
+    "id": 77139186,
+    "name": "VLC for Android",
+    "package": "org.videolan.vlc",
+    "size": 49625284,
+    "icon": "https://pool.img.aptoide.com/aplicationpaidprofree/42ead380c70ce272e5c6ab770724b9b2_icon.png",
+    "added": "2018-12-04 20:36:48",
+    "modified": "2026-10-16 17:56:35",
+    "updated": "2026-11-12 22:55:47",
+    "developer": {
+      "id": 76853,
+      "name": "Videolabs",
+      "website": "http://www.videolan.org"
+    },
+    "store": {
+      "id": 2360723,
+      "name": "aplicationpaidprofree"
+    },
+    "file": {
+      "vername": "3.7.2 Beta 3",
+      "vercode": 13070136,
+      "md5sum": "b6bd9c33371332f788c204764b8ebd41",
+      "filesize": 49625284,
+      "signature": {
+        "sha1": "EE:FB:C9:81:42:83:43:BB:DD:FF:F6:B2:3B:6B:D8:71:73:51:41:0C",
+        "owner": "CN=Jean-Baptiste Kempf, O=VideoLAN Mobile, L=Paris, C=FR"
+      },
+      "added": "2026-10-16 17:56:35",
+      "path": "https://pool.apk.aptoide.com/aplicationpaidprofree/org-videolan-vlc-13070136-77139186-b6bd9c33371332f788c204764b8ebd41.apk",
+      "path_alt": "https://pool.apk.aptoide.com/aplicationpaidprofree/org-videolan-vlc-13070136-77139186-b6bd9c33371332f788c204764b8ebd41.apk",
+      "hardware": {
+        "sdk": 17,
+        "screen": "SMALL",
+        "gles": 0,
+        "cpus": [
+          "arm64-v8a"
+        ],
+        "densities": [],
+        "dependencies": []
+      },
+      "malware": {
+        "rank": "TRUSTED",
+        "reason": {
+          "signature_validated": {
+            "date": "2026-10-19",
+            "status": "review"
+          }
+        },
+        "added": "2026-10-16 17:56:36",
+        "modified": "2026-11-06 09:35:42"
+      }
+    },
+    "aab": null,
+    "obb": null
+  }
+}
