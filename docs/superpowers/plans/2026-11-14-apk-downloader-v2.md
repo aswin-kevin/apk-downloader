@@ -24,7 +24,8 @@
 - Kali `/tmp` is a 3.8 GB tmpfs: live tests use small apps only.
 - Node `>=20`; `"type": "module"`; runtime deps only `undici`, `yauzl`.
 - Package name `apk-downloader`, version `2.0.0`, repo `https://github.com/aswin-kevin/apk-downloader`.
-- Default download source order `['apkpure', 'aptoide']`; default metadata order `['aptoide', 'apkpure']`.
+- Default download source order `['aptoide', 'apkpure', 'fdroid']`; default metadata order `['aptoide', 'fdroid', 'apkpure']` (amended — spec §9).
+- Supply chain: exact version pins, `.npmrc` `ignore-scripts=true` + `save-exact=true`, `npm audit` clean, no new dependency without owner approval.
 - Defaults: `timeout` 30000 ms, `retries` 3, `fileName` `'{package}-{version}.{ext}'`, `format` `'auto'`, `ifExists` `'skip'`, `verify` true, CLI `concurrency` 2.
 - CLI: `-V/--version` = tool version; `-a/--app-version` = app version. Exit codes 0 / 1 / 2 / 130.
 - Commit after every task to `main`; push at the end of each task. Commit trailer: `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
@@ -120,6 +121,15 @@
 - [ ] **Step 2: Failing tests** (fake fetch returning 302 + `location`): `resolve latest apk` → `request(..., { redirect: 'manual' })`, url = location, `fileName` from `filename` query param, `size` from `full_size`, versionName parsed from filename `<Name>_<ver>_APKPure.apk`; `404 → AppNotFoundError`; `auto tries APK then XAPK` (APK path signals split → XAPK resolved, format `xapk`); `unknown version → VersionNotFoundError`; 403/other → `SourceUnavailableError`; `getInfo` returns minimal `AppInfo` built from the same redirect.
 - [ ] **Step 3: Run** → FAIL. **Step 4: Implement** per findings. **Step 5: Run** → PASS.
 - [ ] **Step 6: Commit** `feat: add APKPure source`.
+
+### Task 5b: F-Droid source (added — spec §9)
+
+**Files:** Create `src/sources/fdroid.ts`, fixtures `test/fixtures/fdroid/*.json`; Test `test/unit/sources/fdroid.test.ts`.
+
+**Interfaces — Produces:** `createFdroidSource({ baseUrl? }): Source`, `fdroid: Source` (`id: 'fdroid'`, `getInfo`, `resolve`, `listVersions`).
+
+- [ ] Failing tests: getInfo/listVersions map `api/v1/packages/<pkg>`; 404 `{"error":"NOT_FOUND"}` → `AppNotFoundError`; resolve latest = suggestedVersionCode confirmed by HEAD on `/repo/<pkg>_<code>.apk`, falling back to the next newest listed code on 404 (max 3 HEADs) → else `SourceUnavailableError` reason `not-hosted`; size from `content-length`; specific version by name or code, missing file → `VersionNotFoundError`; `format: 'xapk'` → `format-unsupported`.
+- [ ] Implement, run, commit `feat: add F-Droid source`.
 
 ### Task 6: Streaming download pipeline
 

@@ -320,7 +320,35 @@ Download options:
 - **CLI flags:** `-V, --version` prints the tool version (convention). The app version is
   `-a, --app-version <ver>`. This replaces `-v, --version <ver>` in §6.6.
 
-## 9. Left to the builder
+## 9. Amendments during implementation (2026-11-14)
+
+**Owner decisions**
+- **APKPure is blocked for Node.** `d.apkpure.com` sits behind Cloudflare bot protection, which
+  challenges Node's HTTP stack (`403`, `cf-mitigated: challenge`) regardless of headers. The library
+  does **not** attempt to evade it (no TLS fingerprint spoofing, no curl shelling). APKPure stays as a
+  source that reports `SourceUnavailableError` with reason `blocked`, so it works again automatically
+  if access is restored, and custom transports remain possible through the `Source` interface.
+- **Sources:** Aptoide becomes the primary source. **F-Droid** (official API, official signed builds,
+  open-source apps only) is added. **Uptodown is rejected**: it has no package-name lookup, and its
+  download links are built by private JavaScript endpoints; supporting it would mean reverse-engineering
+  an undocumented API.
+- **Default orders:** downloads `['aptoide', 'apkpure', 'fdroid']`; metadata `['aptoide', 'fdroid', 'apkpure']`.
+- **Supply-chain hardening:** only well-known dependencies (runtime: `undici` from the Node.js project and
+  `yauzl`, plus its single dependency `pend`); every version pinned exactly; `.npmrc` with
+  `ignore-scripts=true` and `save-exact=true`; `npm audit` must be clean (dev-only `minimatch` pinned to
+  11.0.8 via `overrides`); `npm audit signatures` verified in CI; Dependabot with a cooldown so fresh
+  releases are not adopted immediately.
+- **Environment:** nothing runs on the Mac; everything executes on Kali under `/tmp/apkdl`.
+
+**Calls made during implementation**
+- **Aptoide trust:** Aptoide is a user-upload store with fake uploads (e.g. 3 MB "games" signed by
+  random certificates). Only `TRUSTED` uploads are accepted by default; `allowUntrusted` accepts
+  `UNKNOWN` / `WARNING` but never `CRITICAL`. The rating is exposed as `AppInfo.trust`.
+- **F-Droid latest:** the API's `suggestedVersionCode` can point to a version whose file is no longer
+  hosted, so resolving confirms the file with a HEAD request and falls back to the next newest listed version.
+- `undici` is pinned to 7.x (8.x requires Node ≥ 22.19); engines `>=20.18.1`.
+
+## 10. Left to the builder
 
 - Exact APKPure query param for specific versions (verify live).
 - Choice of small test apps for live tests (APK and XAPK cases).
