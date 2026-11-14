@@ -26,6 +26,7 @@ import type {
   ClientOptions,
   DownloadOptions,
   DownloadResult,
+  Progress,
   ResolvedDownload,
   Source,
 } from './types.js';
@@ -50,6 +51,10 @@ export interface LookupCallOptions {
 export interface DownloadManyOptions extends DownloadOptions {
   /** Parallel downloads. Default 2. */
   concurrency?: number;
+  /** Progress of one package (in addition to `onProgress`, which cannot tell packages apart). */
+  onItemProgress?: (packageName: string, progress: Progress) => void;
+  /** Called as soon as each package finishes, successfully or not. */
+  onItemDone?: (result: BatchResult) => void;
 }
 
 /**
@@ -110,17 +115,27 @@ export class ApkDownloader {
    * every (deduplicated) package gets an `ok` or error entry, in input order.
    */
   async downloadMany(packageNames: string[], options: DownloadManyOptions = {}): Promise<BatchResult[]> {
-    const { concurrency = DEFAULT_CONCURRENCY, ...downloadOptions } = options;
+    const { concurrency = DEFAULT_CONCURRENCY, onItemProgress, onItemDone, ...downloadOptions } = options;
     const limit = pLimit(concurrency);
     const unique = [...new Set(packageNames)];
     return Promise.all(
       unique.map((packageName) =>
         limit(async (): Promise<BatchResult> => {
-          try {
-            return { packageName, ok: true, result: await this.download(packageName, downloadOptions) };
-          } catch (error) {
-            return { packageName, ok: false, error: error instanceof Error ? error : new Error(String(error)) };
+          const itemOptions: DownloadOptions = { ...downloadOptions };
+          if (onItemProgress || downloadOptions.onProgress) {
+            itemOptions.onProgress = (progress) => {
+              downloadOptions.onProgress?.(progress);
+              onItemProgress?.(packageName, progress);
+            };
           }
+          let item: BatchResult;
+          try {
+            item = { packageName, ok: true, result: await this.download(packageName, itemOptions) };
+          } catch (error) {
+            item = { packageName, ok: false, error: error instanceof Error ? error : new Error(String(error)) };
+          }
+          onItemDone?.(item);
+          return item;
         }),
       ),
     );

@@ -10,4 +10,11 @@ export default defineConfig([
     target: 'node20',
     platform: 'node',
   },
+  {
+    entry: { 'cli/main': 'src/cli/main.ts' },
+    format: ['esm'],
+    sourcemap: true,
+    target: 'node20',
+    platform: 'node',
+  },
 ]);

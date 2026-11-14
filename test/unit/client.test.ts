@@ -304,6 +304,21 @@ describe('ApkDownloader.downloadMany', () => {
     expect(peak).toBe(2);
   });
 
+  it('reports progress and completion per package', async () => {
+    const progress = new Set<string>();
+    const done: string[] = [];
+    await client([fakeSource('one')]).downloadMany(['a.b', 'com.missing.app'], {
+      outDir: dir,
+      onItemProgress: (pkg, p) => {
+        expect(p.transferred).toBeGreaterThan(0);
+        progress.add(pkg);
+      },
+      onItemDone: (r) => done.push(`${r.packageName}:${r.ok}`),
+    });
+    expect([...progress]).toEqual(['a.b', 'com.missing.app']);
+    expect(done.sort()).toEqual(['a.b:true', 'com.missing.app:true']);
+  });
+
   it('dedupes packages', async () => {
     const source = fakeSource('one');
     const results = await client([source]).downloadMany(['a.b', 'a.b', 'c.d'], { outDir: dir });
