@@ -16,7 +16,10 @@ const versions = fixture('aptoide/listAppVersions-vlc.json');
 const notFound = fixture('aptoide/getMeta-notfound.json');
 const untrusted = fixture('aptoide/getMeta-untrusted.json');
 
-const latestRoute: [RegExp, FakeResponse] = [/getMeta\?package_name=org\.videolan\.vlc$/, { json: meta }];
+const latestRoute: [RegExp, FakeResponse] = [
+  /getMeta\?package_name=org\.videolan\.vlc$/,
+  { json: meta },
+];
 const versionsRoute: [string, FakeResponse] = ['listAppVersions', { json: versions }];
 const oldRoute: [string, FakeResponse] = ['getMeta?app_id=77139186', { json: metaOld }];
 
@@ -58,7 +61,9 @@ describe('aptoide source', () => {
       trust: 'TRUSTED',
       source: 'aptoide',
     });
-    expect(http.calls[0]?.url).toBe('https://ws75.aptoide.com/api/7/app/getMeta?package_name=org.videolan.vlc');
+    expect(http.calls[0]?.url).toBe(
+      'https://ws75.aptoide.com/api/7/app/getMeta?package_name=org.videolan.vlc',
+    );
   });
 
   it('getInfo throws AppNotFoundError for an unknown package (HTTP 404, APP-1)', async () => {
@@ -70,7 +75,10 @@ describe('aptoide source', () => {
 
   it('other API failures become SourceUnavailableError', async () => {
     const http = fakeHttp([
-      ['getMeta', { json: { info: { status: 'FAIL' }, errors: [{ code: 'SYS-1', description: 'oops' }] } }],
+      [
+        'getMeta',
+        { json: { info: { status: 'FAIL' }, errors: [{ code: 'SYS-1', description: 'oops' }] } },
+      ],
     ]);
     await expect(aptoide.getInfo(PKG, { http })).rejects.toBeInstanceOf(SourceUnavailableError);
   });
@@ -86,7 +94,9 @@ describe('aptoide source', () => {
     const http = fakeHttp([['getMeta', { body: '<html>' }]]);
     await expect(aptoide.getInfo(PKG, { http })).rejects.toBeInstanceOf(SourceUnavailableError);
     const http2 = fakeHttp([['getMeta', { json: { info: { status: 'OK' }, data: { file: {} } } }]]);
-    await expect(aptoide.getInfo(PKG, { http: http2 })).rejects.toBeInstanceOf(SourceUnavailableError);
+    await expect(aptoide.getInfo(PKG, { http: http2 })).rejects.toBeInstanceOf(
+      SourceUnavailableError,
+    );
   });
 
   it('propagates network errors unchanged', async () => {
@@ -110,16 +120,19 @@ describe('aptoide source', () => {
     });
   });
 
-  it.each([['3.7.2 Beta 3'], ['13070136']])('resolve version %s by name or code via app_id', async (version) => {
-    const http = fakeHttp([versionsRoute, oldRoute]);
-    const resolved = await aptoide.resolve(PKG, opts(http, { version }));
-    expect(resolved.info.versionCode).toBe(13070136);
-    expect(resolved.info.versionName).toBe('3.7.2 Beta 3');
-    expect(http.calls.map((c) => c.url)).toEqual([
-      'https://ws75.aptoide.com/api/7/listAppVersions?package_name=org.videolan.vlc&limit=50',
-      'https://ws75.aptoide.com/api/7/app/getMeta?app_id=77139186',
-    ]);
-  });
+  it.each([['3.7.2 Beta 3'], ['13070136']])(
+    'resolve version %s by name or code via app_id',
+    async (version) => {
+      const http = fakeHttp([versionsRoute, oldRoute]);
+      const resolved = await aptoide.resolve(PKG, opts(http, { version }));
+      expect(resolved.info.versionCode).toBe(13070136);
+      expect(resolved.info.versionName).toBe('3.7.2 Beta 3');
+      expect(http.calls.map((c) => c.url)).toEqual([
+        'https://ws75.aptoide.com/api/7/listAppVersions?package_name=org.videolan.vlc&limit=50',
+        'https://ws75.aptoide.com/api/7/app/getMeta?app_id=77139186',
+      ]);
+    },
+  );
 
   it('unknown version throws VersionNotFoundError', async () => {
     const http = fakeHttp([versionsRoute]);
@@ -129,10 +142,12 @@ describe('aptoide source', () => {
   });
 
   it('specific version of an unknown app throws AppNotFoundError', async () => {
-    const http = fakeHttp([['listAppVersions', { json: fixture('aptoide/listAppVersions-empty.json') }]]);
-    await expect(aptoide.resolve('com.nonexistent.zzzz', opts(http, { version: '1.0' }))).rejects.toBeInstanceOf(
-      AppNotFoundError,
-    );
+    const http = fakeHttp([
+      ['listAppVersions', { json: fixture('aptoide/listAppVersions-empty.json') }],
+    ]);
+    await expect(
+      aptoide.resolve('com.nonexistent.zzzz', opts(http, { version: '1.0' })),
+    ).rejects.toBeInstanceOf(AppNotFoundError);
   });
 
   it('format xapk is unsupported', async () => {
@@ -148,7 +163,9 @@ describe('aptoide source', () => {
       ['getMeta', { json: untrusted }],
       ['listAppVersions', { json: { info: { status: 'OK' }, list: [] } }],
     ]);
-    const err = await aptoide.resolve('com.miHoYo.GenshinImpact', opts(http)).catch((e: unknown) => e);
+    const err = await aptoide
+      .resolve('com.miHoYo.GenshinImpact', opts(http))
+      .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(SourceUnavailableError);
     expect((err as SourceUnavailableError).reason).toBe('untrusted');
   });
@@ -170,7 +187,10 @@ describe('aptoide source', () => {
 
   it('allowUntrusted accepts UNKNOWN and WARNING but never CRITICAL', async () => {
     const http = fakeHttp([['getMeta', { json: untrusted }]]);
-    const resolved = await aptoide.resolve('com.miHoYo.GenshinImpact', opts(http, { allowUntrusted: true }));
+    const resolved = await aptoide.resolve(
+      'com.miHoYo.GenshinImpact',
+      opts(http, { allowUntrusted: true }),
+    );
     expect(resolved.info.trust).toBe('UNKNOWN');
 
     const critical = fakeHttp([
@@ -211,8 +231,12 @@ describe('aptoide source', () => {
   });
 
   it('listVersions throws AppNotFoundError when there are no versions', async () => {
-    const http = fakeHttp([['listAppVersions', { json: fixture('aptoide/listAppVersions-empty.json') }]]);
-    await expect(aptoide.listVersions!('com.nonexistent.zzzz', { http })).rejects.toBeInstanceOf(AppNotFoundError);
+    const http = fakeHttp([
+      ['listAppVersions', { json: fixture('aptoide/listAppVersions-empty.json') }],
+    ]);
+    await expect(aptoide.listVersions!('com.nonexistent.zzzz', { http })).rejects.toBeInstanceOf(
+      AppNotFoundError,
+    );
   });
 
   it('URL-encodes the package name', async () => {

@@ -16,7 +16,13 @@ afterEach(async () => {
 const noSleep = async () => {};
 
 function client(overrides: Partial<ConstructorParameters<typeof HttpClient>[0]> = {}) {
-  return new HttpClient({ timeout: 2000, retries: 2, userAgent: 'test-agent', sleep: noSleep, ...overrides });
+  return new HttpClient({
+    timeout: 2000,
+    retries: 2,
+    userAgent: 'test-agent',
+    sleep: noSleep,
+    ...overrides,
+  });
 }
 
 describe('computeBackoff', () => {
@@ -88,14 +94,18 @@ describe('HttpClient', () => {
       res.statusCode = 503;
       res.end();
     });
-    const err = await client().request(server.url).catch((e: unknown) => e);
+    const err = await client()
+      .request(server.url)
+      .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(NetworkError);
     expect((err as NetworkError).status).toBe(503);
     expect(server.hits).toBe(3);
   });
 
   it('throws NetworkError when the connection fails', async () => {
-    const err = await client({ retries: 1 }).request('http://127.0.0.1:1/').catch((e: unknown) => e);
+    const err = await client({ retries: 1 })
+      .request('http://127.0.0.1:1/')
+      .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(NetworkError);
   });
 
@@ -103,7 +113,9 @@ describe('HttpClient', () => {
     server = await startServer(() => {
       /* never respond */
     });
-    const err = await client({ timeout: 100, retries: 1 }).request(server.url).catch((e: unknown) => e);
+    const err = await client({ timeout: 100, retries: 1 })
+      .request(server.url)
+      .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(TimeoutError);
     expect(server.hits).toBe(2);
   });
@@ -145,7 +157,9 @@ describe('HttpClient', () => {
       res.end(JSON.stringify({ hello: 'world' }));
     });
     await expect(client().json(`${server.url}/ok`)).resolves.toEqual({ hello: 'world' });
-    const err = await client().json(`${server.url}/bad`).catch((e: unknown) => e);
+    const err = await client()
+      .json(`${server.url}/bad`)
+      .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(NetworkError);
     expect((err as NetworkError).status).toBe(400);
   });
@@ -191,12 +205,18 @@ describe('HttpClient proxy support', () => {
 
 describe('resolveProxy', () => {
   it('prefers the explicit proxy', () => {
-    expect(resolveProxy('https://a.com/x', 'http://p:1', { HTTPS_PROXY: 'http://env:2' })).toBe('http://p:1');
+    expect(resolveProxy('https://a.com/x', 'http://p:1', { HTTPS_PROXY: 'http://env:2' })).toBe(
+      'http://p:1',
+    );
   });
 
   it('uses HTTPS_PROXY / HTTP_PROXY by scheme, either case', () => {
-    expect(resolveProxy('https://a.com', undefined, { https_proxy: 'http://s:1' })).toBe('http://s:1');
-    expect(resolveProxy('http://a.com', undefined, { HTTP_PROXY: 'http://h:1' })).toBe('http://h:1');
+    expect(resolveProxy('https://a.com', undefined, { https_proxy: 'http://s:1' })).toBe(
+      'http://s:1',
+    );
+    expect(resolveProxy('http://a.com', undefined, { HTTP_PROXY: 'http://h:1' })).toBe(
+      'http://h:1',
+    );
     expect(resolveProxy('http://a.com', undefined, { HTTPS_PROXY: 'http://s:1' })).toBeUndefined();
   });
 
@@ -206,6 +226,8 @@ describe('resolveProxy', () => {
     expect(resolveProxy('https://other.org', undefined, env)).toBeUndefined();
     expect(resolveProxy('https://localhost:8080', undefined, env)).toBeUndefined();
     expect(resolveProxy('https://example.org', undefined, env)).toBe('http://s:1');
-    expect(resolveProxy('https://x.com', undefined, { HTTPS_PROXY: 'http://s:1', NO_PROXY: '*' })).toBeUndefined();
+    expect(
+      resolveProxy('https://x.com', undefined, { HTTPS_PROXY: 'http://s:1', NO_PROXY: '*' }),
+    ).toBeUndefined();
   });
 });

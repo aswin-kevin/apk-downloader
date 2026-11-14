@@ -22,9 +22,9 @@ describe('renderFileName', () => {
   });
 
   it('renders unknown versionCode as empty and leaves unknown placeholders untouched', () => {
-    expect(renderFileName('{package}{versionCode}-{nope}.{ext}', { ...base, versionCode: undefined })).toBe(
-      'a.b-{nope}.apk',
-    );
+    expect(
+      renderFileName('{package}{versionCode}-{nope}.{ext}', { ...base, versionCode: undefined }),
+    ).toBe('a.b-{nope}.apk');
   });
 
   it('sanitizes template values', () => {

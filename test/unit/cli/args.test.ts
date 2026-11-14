@@ -21,20 +21,31 @@ describe('parseCli', () => {
   it('maps every download flag', () => {
     const { options } = parseCli([
       'com.a.b',
-      '-o', 'out',
-      '-n', '{package}.{ext}',
-      '-a', '1.2.3',
-      '-f', 'xapk',
+      '-o',
+      'out',
+      '-n',
+      '{package}.{ext}',
+      '-a',
+      '1.2.3',
+      '-f',
+      'xapk',
       '-x',
-      '-s', 'fdroid',
-      '-s', 'aptoide',
-      '-c', '4',
+      '-s',
+      'fdroid',
+      '-s',
+      'aptoide',
+      '-c',
+      '4',
       '--overwrite',
       '--no-verify',
-      '--timeout', '5000',
-      '--retries', '1',
-      '--proxy', 'http://127.0.0.1:8080',
-      '--user-agent', 'ua',
+      '--timeout',
+      '5000',
+      '--retries',
+      '1',
+      '--proxy',
+      'http://127.0.0.1:8080',
+      '--user-agent',
+      'ua',
       '--allow-untrusted',
       '--json',
       '--verbose',
@@ -76,8 +87,14 @@ describe('parseCli', () => {
   });
 
   it('recognises subcommands', () => {
-    expect(parseCli(['info', 'com.a.b', '--json'])).toMatchObject({ command: 'info', packages: ['com.a.b'] });
-    expect(parseCli(['versions', 'com.a.b'])).toMatchObject({ command: 'versions', packages: ['com.a.b'] });
+    expect(parseCli(['info', 'com.a.b', '--json'])).toMatchObject({
+      command: 'info',
+      packages: ['com.a.b'],
+    });
+    expect(parseCli(['versions', 'com.a.b'])).toMatchObject({
+      command: 'versions',
+      packages: ['com.a.b'],
+    });
     expect(parseCli(['sources']).command).toBe('sources');
   });
 

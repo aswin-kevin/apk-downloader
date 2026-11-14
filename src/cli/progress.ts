@@ -39,11 +39,14 @@ export class ProgressLine {
 
   private draw(): void {
     const parts = [...this.active].map(([pkg, p]) => {
-      const amount = p.total ? `${formatBytes(p.transferred)}/${formatBytes(p.total)}` : formatBytes(p.transferred);
+      const amount = p.total
+        ? `${formatBytes(p.transferred)}/${formatBytes(p.total)}`
+        : formatBytes(p.transferred);
       const speed = `${formatBytes(p.bytesPerSecond)}/s`;
       if (p.percent === undefined) return `${pkg} ${amount} ${this.style.dim(speed)}`;
       const filled = Math.round((p.percent / 100) * BAR_WIDTH);
-      const bar = this.style.cyan('█'.repeat(filled)) + this.style.dim('░'.repeat(BAR_WIDTH - filled));
+      const bar =
+        this.style.cyan('█'.repeat(filled)) + this.style.dim('░'.repeat(BAR_WIDTH - filled));
       return `${pkg} ${bar} ${p.percent.toFixed(1)}% ${amount} ${this.style.dim(speed)}`;
     });
     this.stream.write(`${CLEAR_LINE}${this.style.cyan('⇣')} ${parts.join('  ·  ')}`);

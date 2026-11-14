@@ -47,7 +47,10 @@ export function createApkpureSource(options: ApkpureSourceOptions = {}): Source 
     opts: LookupOptions,
   ): Promise<ResolvedDownload> {
     const url = `${baseUrl}/b/${endpoint}/${encodeURIComponent(packageName)}?${query}`;
-    const response = await opts.http.request(url, { redirect: 'manual', signal: opts.signal ?? null });
+    const response = await opts.http.request(url, {
+      redirect: 'manual',
+      signal: opts.signal ?? null,
+    });
     await response.body?.cancel().catch(() => {});
 
     if (response.status === 404) throw new AppNotFoundError(packageName, { source: ID });
@@ -59,7 +62,10 @@ export function createApkpureSource(options: ApkpureSourceOptions = {}): Source 
     }
     if (response.status < 300 || response.status >= 400) {
       const reason = response.ok ? 'unexpected-response' : `http-${response.status}`;
-      throw new SourceUnavailableError(`APKPure returned HTTP ${response.status}`, { source: ID, reason });
+      throw new SourceUnavailableError(`APKPure returned HTTP ${response.status}`, {
+        source: ID,
+        reason,
+      });
     }
 
     const location = response.headers.get('location');
@@ -80,9 +86,7 @@ export function createApkpureSource(options: ApkpureSourceOptions = {}): Source 
     const endpoint = opts.format === 'xapk' ? 'XAPK' : 'APK';
     const isVersionCode = /^\d+$/.test(opts.version);
     const query =
-      opts.version !== 'latest' && isVersionCode
-        ? `versionCode=${opts.version}`
-        : 'version=latest';
+      opts.version !== 'latest' && isVersionCode ? `versionCode=${opts.version}` : 'version=latest';
 
     const resolved = await lookup(packageName, query, endpoint, opts.version, opts);
 
@@ -91,10 +95,13 @@ export function createApkpureSource(options: ApkpureSourceOptions = {}): Source 
       throw new VersionNotFoundError(packageName, opts.version, { source: ID });
     }
     if (opts.format === 'apk' && resolved.format === 'xapk') {
-      throw new SourceUnavailableError(`${packageName} is only available as a split APK bundle (XAPK)`, {
-        source: ID,
-        reason: 'split-unsupported',
-      });
+      throw new SourceUnavailableError(
+        `${packageName} is only available as a split APK bundle (XAPK)`,
+        {
+          source: ID,
+          reason: 'split-unsupported',
+        },
+      );
     }
     if (opts.format === 'xapk' && resolved.format === 'apk') {
       throw new SourceUnavailableError(`${packageName} is only available as a single APK`, {

@@ -53,22 +53,25 @@ describe('extractXapk', () => {
     expect(await walk(dest)).toEqual(files.map((f) => path.relative(dest, f)).sort());
   });
 
-  it.each(['../evil.apk', 'Android/obb/../../evil.obb', '/abs/evil.apk', 'C:\\evil.apk', 'a\\..\\..\\evil.apk'])(
-    'rejects unsafe entry %j and writes nothing',
-    async (name) => {
-      const file = await archive([
-        { name: 'ok.apk', data: 'ok' },
-        { name, data: 'evil' },
-      ]);
-      const dest = path.join(dir, 'out');
-      const err = await extractXapk(file, dest).catch((e: unknown) => e);
-      expect(err).toBeInstanceOf(UnsafeArchiveError);
-      expect((err as UnsafeArchiveError).code).toBe('ERR_UNSAFE_ARCHIVE');
-      expect(await readdir(dir)).toEqual(expect.not.arrayContaining(['evil.apk', 'evil.obb']));
-      const leftovers = await readdir(dest).catch(() => []);
-      expect(leftovers).toEqual([]);
-    },
-  );
+  it.each([
+    '../evil.apk',
+    'Android/obb/../../evil.obb',
+    '/abs/evil.apk',
+    'C:\\evil.apk',
+    'a\\..\\..\\evil.apk',
+  ])('rejects unsafe entry %j and writes nothing', async (name) => {
+    const file = await archive([
+      { name: 'ok.apk', data: 'ok' },
+      { name, data: 'evil' },
+    ]);
+    const dest = path.join(dir, 'out');
+    const err = await extractXapk(file, dest).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(UnsafeArchiveError);
+    expect((err as UnsafeArchiveError).code).toBe('ERR_UNSAFE_ARCHIVE');
+    expect(await readdir(dir)).toEqual(expect.not.arrayContaining(['evil.apk', 'evil.obb']));
+    const leftovers = await readdir(dest).catch(() => []);
+    expect(leftovers).toEqual([]);
+  });
 
   it('rejects a corrupt archive', async () => {
     const file = path.join(dir, 'bad.xapk');
@@ -80,6 +83,8 @@ describe('extractXapk', () => {
 
   it('rejects an archive without any APK', async () => {
     const file = await archive([{ name: 'manifest.json', data: '{}' }]);
-    await expect(extractXapk(file, path.join(dir, 'out'))).rejects.toBeInstanceOf(InvalidArchiveError);
+    await expect(extractXapk(file, path.join(dir, 'out'))).rejects.toBeInstanceOf(
+      InvalidArchiveError,
+    );
   });
 });

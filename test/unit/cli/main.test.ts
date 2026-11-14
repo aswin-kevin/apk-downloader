@@ -2,7 +2,11 @@ import { Readable, Writable } from 'node:stream';
 import { describe, expect, it } from 'vitest';
 import { run, type CliIO } from '../../../src/cli/main.js';
 import type { ApkDownloader, DownloadManyOptions } from '../../../src/client.js';
-import { AllSourcesFailedError, AppNotFoundError, SourceUnavailableError } from '../../../src/errors.js';
+import {
+  AllSourcesFailedError,
+  AppNotFoundError,
+  SourceUnavailableError,
+} from '../../../src/errors.js';
 import type { AppInfo, BatchResult, DownloadResult } from '../../../src/types.js';
 
 /** SGR color/style sequences (cursor control such as clear-line is allowed). */
@@ -39,29 +43,44 @@ function fakeClient(recorded: Recorded = { batches: [] }): ApkDownloader {
   return {
     async downloadMany(packages: string[], options: DownloadManyOptions): Promise<BatchResult[]> {
       recorded.batches.push({ packages, options });
-      return packages.map((packageName): BatchResult => {
-        if (packageName === 'com.missing.app') {
-          return { packageName, ok: false, error: new AppNotFoundError(packageName) };
-        }
-        if (packageName === 'com.broken.app') {
-          return {
-            packageName,
-            ok: false,
-            error: new AllSourcesFailedError(packageName, [
-              new SourceUnavailableError('blocked', { source: 'apkpure', reason: 'blocked' }),
-            ]),
-          };
-        }
-        options.onItemProgress?.(packageName, { transferred: 100, total: 200, percent: 50, bytesPerSecond: 1000 });
-        return { packageName, ok: true, result: okResult(packageName) };
-      }).map((r) => {
-        options.onItemDone?.(r);
-        return r;
-      });
+      return packages
+        .map((packageName): BatchResult => {
+          if (packageName === 'com.missing.app') {
+            return { packageName, ok: false, error: new AppNotFoundError(packageName) };
+          }
+          if (packageName === 'com.broken.app') {
+            return {
+              packageName,
+              ok: false,
+              error: new AllSourcesFailedError(packageName, [
+                new SourceUnavailableError('blocked', { source: 'apkpure', reason: 'blocked' }),
+              ]),
+            };
+          }
+          options.onItemProgress?.(packageName, {
+            transferred: 100,
+            total: 200,
+            percent: 50,
+            bytesPerSecond: 1000,
+          });
+          return { packageName, ok: true, result: okResult(packageName) };
+        })
+        .map((r) => {
+          options.onItemDone?.(r);
+          return r;
+        });
     },
     async getInfo(packageName: string): Promise<AppInfo> {
       if (packageName === 'com.missing.app') throw new AppNotFoundError(packageName);
-      return { packageName, name: 'Example', versionName: '1.0', versionCode: 10, size: 1024, source: 'aptoide', trust: 'TRUSTED' };
+      return {
+        packageName,
+        name: 'Example',
+        versionName: '1.0',
+        versionCode: 10,
+        size: 1024,
+        source: 'aptoide',
+        trust: 'TRUSTED',
+      };
     },
     async listVersions() {
       return [{ versionName: '1.0', versionCode: 10 }];
@@ -69,7 +88,15 @@ function fakeClient(recorded: Recorded = { batches: [] }): ApkDownloader {
   } as unknown as ApkDownloader;
 }
 
-async function cli(argv: string[], options: { stdin?: string; isTTY?: boolean; env?: NodeJS.ProcessEnv; client?: ApkDownloader } = {}) {
+async function cli(
+  argv: string[],
+  options: {
+    stdin?: string;
+    isTTY?: boolean;
+    env?: NodeJS.ProcessEnv;
+    client?: ApkDownloader;
+  } = {},
+) {
   const stdout = sink();
   const stderr = sink();
   const io: CliIO = {
@@ -113,12 +140,17 @@ describe('cli run()', () => {
 
   it('downloads and exits 0 when everything succeeds', async () => {
     const recorded: Recorded = { batches: [] };
-    const { code, stdout, stderr } = await cli(['com.a.b', '-o', 'out', '-c', '3'], { client: fakeClient(recorded) });
+    const { code, stdout, stderr } = await cli(['com.a.b', '-o', 'out', '-c', '3'], {
+      client: fakeClient(recorded),
+    });
     expect(code).toBe(0);
     expect(stdout).toBe('');
     expect(stderr).toContain('com.a.b');
     expect(stderr).toContain('/out/com.a.b-1.0.apk');
-    expect(recorded.batches[0]).toMatchObject({ packages: ['com.a.b'], options: { outDir: 'out', concurrency: 3 } });
+    expect(recorded.batches[0]).toMatchObject({
+      packages: ['com.a.b'],
+      options: { outDir: 'out', concurrency: 3 },
+    });
   });
 
   it('exits 1 if any download failed and explains why', async () => {
@@ -149,7 +181,10 @@ describe('cli run()', () => {
 
   it('reads packages from stdin, ignoring blank lines and comments', async () => {
     const recorded: Recorded = { batches: [] };
-    await cli(['-i', '-', 'com.x.y'], { stdin: '# list\ncom.a.b\n\n  org.c.d  # trailing\n', client: fakeClient(recorded) });
+    await cli(['-i', '-', 'com.x.y'], {
+      stdin: '# list\ncom.a.b\n\n  org.c.d  # trailing\n',
+      client: fakeClient(recorded),
+    });
     expect(recorded.batches[0]?.packages).toEqual(['com.x.y', 'com.a.b', 'org.c.d']);
   });
 
@@ -192,7 +227,9 @@ describe('cli run()', () => {
   });
 
   it('no ANSI colors when NO_COLOR is set or output is not a TTY', async () => {
-    expect((await cli(['com.a.b'], { isTTY: true, env: { NO_COLOR: '1' } })).stderr).not.toMatch(ANSI);
+    expect((await cli(['com.a.b'], { isTTY: true, env: { NO_COLOR: '1' } })).stderr).not.toMatch(
+      ANSI,
+    );
     expect((await cli(['com.a.b'], { isTTY: false })).stderr).not.toMatch(ANSI);
     expect((await cli(['com.a.b'], { isTTY: true })).stderr).toMatch(ANSI);
   });

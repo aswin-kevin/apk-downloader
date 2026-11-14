@@ -68,7 +68,9 @@ export function createFdroidSource(options: FdroidSourceOptions = {}): Source {
       app = undefined;
     }
     const packages = Array.isArray(app?.packages)
-      ? app.packages.filter((p) => typeof p?.versionName === 'string' && Number.isSafeInteger(p?.versionCode))
+      ? app.packages.filter(
+          (p) => typeof p?.versionName === 'string' && Number.isSafeInteger(p?.versionCode),
+        )
       : [];
     if (!app || packages.length === 0) {
       throw new SourceUnavailableError('F-Droid returned an unexpected response', {
@@ -77,7 +79,8 @@ export function createFdroidSource(options: FdroidSourceOptions = {}): Source {
       });
     }
     const result: FdroidApp = { packageName, packages };
-    if (Number.isSafeInteger(app.suggestedVersionCode)) result.suggestedVersionCode = app.suggestedVersionCode as number;
+    if (Number.isSafeInteger(app.suggestedVersionCode))
+      result.suggestedVersionCode = app.suggestedVersionCode as number;
     return result;
   }
 
@@ -103,7 +106,10 @@ export function createFdroidSource(options: FdroidSourceOptions = {}): Source {
   function assertSingleBuild(app: FdroidApp, pkg: FdroidPackage): void {
     const builds = app.packages.filter((p) => p.versionName === pkg.versionName);
     if (builds.length > 1) {
-      const codes = builds.map((p) => p.versionCode).sort((a, b) => a - b).join(', ');
+      const codes = builds
+        .map((p) => p.versionCode)
+        .sort((a, b) => a - b)
+        .join(', ');
       throw new SourceUnavailableError(
         `F-Droid has one build per CPU architecture for ${app.packageName} ${pkg.versionName} ` +
           `(versionCodes ${codes}); request an exact versionCode`,
@@ -112,7 +118,12 @@ export function createFdroidSource(options: FdroidSourceOptions = {}): Source {
     }
   }
 
-  function toResolved(app: FdroidApp, pkg: FdroidPackage, url: string, size: number | undefined): ResolvedDownload {
+  function toResolved(
+    app: FdroidApp,
+    pkg: FdroidPackage,
+    url: string,
+    size: number | undefined,
+  ): ResolvedDownload {
     const info = toInfo(app.packageName, pkg);
     const resolved: ResolvedDownload = {
       source: ID,
@@ -131,10 +142,9 @@ export function createFdroidSource(options: FdroidSourceOptions = {}): Source {
   async function resolveLatest(app: FdroidApp, opts: ResolveOptions): Promise<ResolvedDownload> {
     const newestFirst = [...app.packages].sort((a, b) => b.versionCode - a.versionCode);
     const suggested = newestFirst.find((p) => p.versionCode === app.suggestedVersionCode);
-    const candidates = (suggested ? [suggested, ...newestFirst.filter((p) => p !== suggested)] : newestFirst).slice(
-      0,
-      MAX_LATEST_CANDIDATES,
-    );
+    const candidates = (
+      suggested ? [suggested, ...newestFirst.filter((p) => p !== suggested)] : newestFirst
+    ).slice(0, MAX_LATEST_CANDIDATES);
 
     for (const pkg of candidates) {
       assertSingleBuild(app, pkg);
@@ -142,10 +152,13 @@ export function createFdroidSource(options: FdroidSourceOptions = {}): Source {
       const file = await probe(url, opts);
       if (file) return toResolved(app, pkg, url, file.size);
     }
-    throw new SourceUnavailableError(`F-Droid no longer hosts recent versions of ${app.packageName}`, {
-      source: ID,
-      reason: 'not-hosted',
-    });
+    throw new SourceUnavailableError(
+      `F-Droid no longer hosts recent versions of ${app.packageName}`,
+      {
+        source: ID,
+        reason: 'not-hosted',
+      },
+    );
   }
 
   async function resolveVersion(app: FdroidApp, opts: ResolveOptions): Promise<ResolvedDownload> {
@@ -155,7 +168,8 @@ export function createFdroidSource(options: FdroidSourceOptions = {}): Source {
     let pkg = byCode;
     if (!pkg) {
       const byName = app.packages.filter((p) => p.versionName === opts.version);
-      if (byName.length === 0) throw new VersionNotFoundError(app.packageName, opts.version, { source: ID });
+      if (byName.length === 0)
+        throw new VersionNotFoundError(app.packageName, opts.version, { source: ID });
       pkg = byName[0] as FdroidPackage;
       assertSingleBuild(app, pkg);
     }

@@ -33,7 +33,10 @@ export function download(packageName: string, options?: DownloadOptions): Promis
 }
 
 /** Download several apps with the default client. See {@link ApkDownloader.downloadMany}. */
-export function downloadMany(packageNames: string[], options?: DownloadManyOptions): Promise<BatchResult[]> {
+export function downloadMany(
+  packageNames: string[],
+  options?: DownloadManyOptions,
+): Promise<BatchResult[]> {
   return client().downloadMany(packageNames, options);
 }
 
@@ -43,7 +46,10 @@ export function getInfo(packageName: string, options?: LookupCallOptions): Promi
 }
 
 /** List versions with the default client. See {@link ApkDownloader.listVersions}. */
-export function listVersions(packageName: string, options?: LookupCallOptions): Promise<AppVersion[]> {
+export function listVersions(
+  packageName: string,
+  options?: LookupCallOptions,
+): Promise<AppVersion[]> {
   return client().listVersions(packageName, options);
 }
 
@@ -56,10 +62,13 @@ let warnedDownloadAPK = false;
 export function downloadAPK(packageName: string): Promise<DownloadResult> {
   if (!warnedDownloadAPK) {
     warnedDownloadAPK = true;
-    process.emitWarning('downloadAPK() is deprecated; use download(packageName, options) instead.', {
-      type: 'DeprecationWarning',
-      code: 'APKDL_DEP_DOWNLOADAPK',
-    });
+    process.emitWarning(
+      'downloadAPK() is deprecated; use download(packageName, options) instead.',
+      {
+        type: 'DeprecationWarning',
+        code: 'APKDL_DEP_DOWNLOADAPK',
+      },
+    );
   }
   return client().download(packageName, { outDir: path.join(process.cwd(), 'Downloads') });
 }

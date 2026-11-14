@@ -48,7 +48,8 @@ export function fakeHttp(routes: Array<[string | RegExp, FakeResponse]>): FakeHt
     request,
     async json<T>(url: string, init?: HttpRequestInit): Promise<T> {
       const response = await request(url, init);
-      if (!response.ok) throw new NetworkError(`HTTP ${response.status}`, { url, status: response.status });
+      if (!response.ok)
+        throw new NetworkError(`HTTP ${response.status}`, { url, status: response.status });
       return (await response.json()) as T;
     },
   };

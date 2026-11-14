@@ -94,17 +94,25 @@ export function parseCli(argv: string[]): ParsedCli {
   if (values.name !== undefined) options.fileName = values.name;
   if (values['app-version'] !== undefined) options.version = values['app-version'];
   if (values.format !== undefined) {
-    if (!FORMATS.has(values.format)) throw new UsageError(`--format must be apk, xapk or auto (got ${values.format})`);
+    if (!FORMATS.has(values.format))
+      throw new UsageError(`--format must be apk, xapk or auto (got ${values.format})`);
     options.format = values.format as FormatOption;
   }
   options.extract = values.extract ?? false;
   options.sources = values.source ?? [];
   if (values.input !== undefined) options.input = values.input;
-  if (values.concurrency !== undefined) options.concurrency = integer('--concurrency', values.concurrency, 1);
+  if (values.concurrency !== undefined)
+    options.concurrency = integer('--concurrency', values.concurrency, 1);
 
-  const ifExists = (['overwrite', 'skip-existing', 'fail-existing'] as const).filter((flag) => values[flag]);
-  if (ifExists.length > 1) throw new UsageError('Use only one of --overwrite, --skip-existing, --fail-existing');
-  if (ifExists[0]) options.ifExists = ({ overwrite: 'overwrite', 'skip-existing': 'skip', 'fail-existing': 'error' } as const)[ifExists[0]];
+  const ifExists = (['overwrite', 'skip-existing', 'fail-existing'] as const).filter(
+    (flag) => values[flag],
+  );
+  if (ifExists.length > 1)
+    throw new UsageError('Use only one of --overwrite, --skip-existing, --fail-existing');
+  if (ifExists[0])
+    options.ifExists = (
+      { overwrite: 'overwrite', 'skip-existing': 'skip', 'fail-existing': 'error' } as const
+    )[ifExists[0]];
 
   options.verify = !values['no-verify'];
   if (values.timeout !== undefined) options.timeout = integer('--timeout', values.timeout, 1);

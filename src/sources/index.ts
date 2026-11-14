@@ -18,4 +18,8 @@ export const builtinSources: Readonly<Record<string, Source>> = Object.freeze({
 export const DEFAULT_SOURCES: readonly string[] = Object.freeze(['aptoide', 'apkpure', 'fdroid']);
 
 /** Default order for `getInfo` / `listVersions` (richest metadata first). */
-export const DEFAULT_INFO_SOURCES: readonly string[] = Object.freeze(['aptoide', 'fdroid', 'apkpure']);
+export const DEFAULT_INFO_SOURCES: readonly string[] = Object.freeze([
+  'aptoide',
+  'fdroid',
+  'apkpure',
+]);

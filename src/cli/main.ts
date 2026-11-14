@@ -70,11 +70,13 @@ export async function run(argv: string[], io: CliIO): Promise<number> {
     return usageError(io, error);
   }
   const { command, packages, options } = parsed;
-  const style = createStyle(io.isTTY && !io.env.NO_COLOR && options.color !== false && !options.json);
+  const style = createStyle(
+    io.isTTY && !io.env.NO_COLOR && options.color !== false && !options.json,
+  );
 
-  if (command === 'help') return write(io.stdout, HELP), 0;
-  if (command === 'version') return write(io.stdout, `${VERSION}\n`), 0;
-  if (command === 'sources') return listSources(io, options), 0;
+  if (command === 'help') return (write(io.stdout, HELP), 0);
+  if (command === 'version') return (write(io.stdout, `${VERSION}\n`), 0);
+  if (command === 'sources') return (listSources(io, options), 0);
 
   let client: ApkDownloader;
   try {
@@ -84,15 +86,20 @@ export async function run(argv: string[], io: CliIO): Promise<number> {
   }
 
   try {
-    if (command === 'info') return await showInfo(io, client, packages[0] as string, options, style);
-    if (command === 'versions') return await showVersions(io, client, packages[0] as string, options);
+    if (command === 'info')
+      return await showInfo(io, client, packages[0] as string, options, style);
+    if (command === 'versions')
+      return await showVersions(io, client, packages[0] as string, options);
 
     let all = packages;
     if (options.input !== undefined) {
       try {
         all = [...packages, ...(await readPackageList(options.input, io.stdin))];
       } catch (error) {
-        return usageError(io, new UsageError(`Cannot read ${options.input}: ${(error as Error).message}`));
+        return usageError(
+          io,
+          new UsageError(`Cannot read ${options.input}: ${(error as Error).message}`),
+        );
       }
       if (all.length === 0) return usageError(io, new UsageError('No package names given'));
     }
@@ -105,7 +112,13 @@ export async function run(argv: string[], io: CliIO): Promise<number> {
   }
 }
 
-async function downloadAll(io: CliIO, client: ApkDownloader, packages: string[], options: CliOptions, style: Style): Promise<number> {
+async function downloadAll(
+  io: CliIO,
+  client: ApkDownloader,
+  packages: string[],
+  options: CliOptions,
+  style: Style,
+): Promise<number> {
   const showProgress = io.isTTY && !options.quiet && !options.json;
   const progress = showProgress ? new ProgressLine(io.stderr, style) : undefined;
 
@@ -133,7 +146,9 @@ async function downloadAll(io: CliIO, client: ApkDownloader, packages: string[],
 
   if (options.json) {
     const doc = {
-      results: results.map((r) => (r.ok ? r : { packageName: r.packageName, ok: false, error: serializeError(r.error) })),
+      results: results.map((r) =>
+        r.ok ? r : { packageName: r.packageName, ok: false, error: serializeError(r.error) },
+      ),
     };
     write(io.stdout, `${JSON.stringify(doc, null, 2)}\n`);
   } else if (!options.quiet && results.length > 1) {
@@ -147,7 +162,8 @@ async function downloadAll(io: CliIO, client: ApkDownloader, packages: string[],
 function reportItem(io: CliIO, options: CliOptions, style: Style, item: BatchResult): void {
   if (!item.ok) {
     write(io.stderr, `${style.red('✖')} ${style.bold(item.packageName)}: ${item.error.message}\n`);
-    if (options.verbose) for (const line of errorDetails(item.error)) write(io.stderr, `    ${style.dim(line)}\n`);
+    if (options.verbose)
+      for (const line of errorDetails(item.error)) write(io.stderr, `    ${style.dim(line)}\n`);
     return;
   }
   if (options.quiet) return;
@@ -156,11 +172,20 @@ function reportItem(io: CliIO, options: CliOptions, style: Style, item: BatchRes
   const details = style.dim(`(${formatBytes(r.size)}, ${r.source})`);
   const mark = r.skipped ? style.yellow('↷') : style.green('✔');
   const note = r.skipped ? ` ${style.dim('already exists')}` : '';
-  write(io.stderr, `${mark} ${style.bold(r.packageName)}${version} → ${r.filePath} ${details}${note}\n`);
+  write(
+    io.stderr,
+    `${mark} ${style.bold(r.packageName)}${version} → ${r.filePath} ${details}${note}\n`,
+  );
   for (const file of r.extractedFiles ?? []) write(io.stderr, `    ${style.dim(file)}\n`);
 }
 
-async function showInfo(io: CliIO, client: ApkDownloader, pkg: string, options: CliOptions, style: Style): Promise<number> {
+async function showInfo(
+  io: CliIO,
+  client: ApkDownloader,
+  pkg: string,
+  options: CliOptions,
+  style: Style,
+): Promise<number> {
   const info = await client.getInfo(pkg, io.signal ? { signal: io.signal } : {});
   if (options.json) {
     write(io.stdout, `${JSON.stringify(info, null, 2)}\n`);
@@ -172,7 +197,12 @@ async function showInfo(io: CliIO, client: ApkDownloader, pkg: string, options: 
 
 function formatInfo(info: AppInfo, style: Style): string {
   const rows: Array<[string, string | undefined]> = [
-    ['Version', info.versionName ? `${info.versionName}${info.versionCode !== undefined ? ` (${info.versionCode})` : ''}` : undefined],
+    [
+      'Version',
+      info.versionName
+        ? `${info.versionName}${info.versionCode !== undefined ? ` (${info.versionCode})` : ''}`
+        : undefined,
+    ],
     ['Format', info.format],
     ['Size', info.size !== undefined ? formatBytes(info.size) : undefined],
     ['Developer', info.developer],
@@ -183,12 +213,21 @@ function formatInfo(info: AppInfo, style: Style): string {
     ['Trust', info.trust],
     ['Source', info.source],
   ];
-  const title = info.name ? `${style.bold(info.name)} ${style.dim(`(${info.packageName})`)}` : style.bold(info.packageName);
-  const lines = rows.filter(([, v]) => v !== undefined).map(([k, v]) => `  ${style.dim(k.padEnd(11))}${v}`);
+  const title = info.name
+    ? `${style.bold(info.name)} ${style.dim(`(${info.packageName})`)}`
+    : style.bold(info.packageName);
+  const lines = rows
+    .filter(([, v]) => v !== undefined)
+    .map(([k, v]) => `  ${style.dim(k.padEnd(11))}${v}`);
   return `${title}\n${lines.join('\n')}\n`;
 }
 
-async function showVersions(io: CliIO, client: ApkDownloader, pkg: string, options: CliOptions): Promise<number> {
+async function showVersions(
+  io: CliIO,
+  client: ApkDownloader,
+  pkg: string,
+  options: CliOptions,
+): Promise<number> {
   const versions = await client.listVersions(pkg, io.signal ? { signal: io.signal } : {});
   if (options.json) {
     write(io.stdout, `${JSON.stringify(versions, null, 2)}\n`);
@@ -196,14 +235,25 @@ async function showVersions(io: CliIO, client: ApkDownloader, pkg: string, optio
   }
   const width = Math.max(7, ...versions.map((v) => v.versionName.length));
   for (const v of versions) {
-    const extra = [v.size !== undefined ? formatBytes(v.size) : '', v.trust ?? '', v.added ?? ''].filter(Boolean).join('  ');
-    write(io.stdout, `${v.versionName.padEnd(width)}  ${String(v.versionCode ?? '').padEnd(12)}${extra}\n`.replace(/\s+\n$/, '\n'));
+    const extra = [v.size !== undefined ? formatBytes(v.size) : '', v.trust ?? '', v.added ?? '']
+      .filter(Boolean)
+      .join('  ');
+    write(
+      io.stdout,
+      `${v.versionName.padEnd(width)}  ${String(v.versionCode ?? '').padEnd(12)}${extra}\n`.replace(
+        /\s+\n$/,
+        '\n',
+      ),
+    );
   }
   return 0;
 }
 
 function listSources(io: CliIO, options: CliOptions): void {
-  const list = DEFAULT_SOURCES.map((id) => ({ id, description: builtinSources[id]?.description ?? '' }));
+  const list = DEFAULT_SOURCES.map((id) => ({
+    id,
+    description: builtinSources[id]?.description ?? '',
+  }));
   if (options.json) write(io.stdout, `${JSON.stringify(list, null, 2)}\n`);
   else for (const s of list) write(io.stdout, `${s.id.padEnd(10)} ${s.description}\n`);
 }
@@ -241,7 +291,8 @@ function fail(io: CliIO, options: CliOptions, style: Style, error: Error): void 
     return;
   }
   write(io.stderr, `${style.red('✖')} ${error.message}\n`);
-  if (options.verbose) for (const line of errorDetails(error)) write(io.stderr, `    ${style.dim(line)}\n`);
+  if (options.verbose)
+    for (const line of errorDetails(error)) write(io.stderr, `    ${style.dim(line)}\n`);
 }
 
 function usageError(io: CliIO, error: unknown): number {

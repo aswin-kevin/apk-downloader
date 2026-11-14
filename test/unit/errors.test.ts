@@ -21,10 +21,18 @@ describe('errors', () => {
     [new InvalidPackageError('x'), 'ERR_INVALID_PACKAGE', 'InvalidPackageError'],
     [new AppNotFoundError('a.b', { source: 'aptoide' }), 'ERR_APP_NOT_FOUND', 'AppNotFoundError'],
     [new VersionNotFoundError('a.b', '1.0'), 'ERR_VERSION_NOT_FOUND', 'VersionNotFoundError'],
-    [new SourceUnavailableError('down', { source: 'apkpure', reason: 'http-403' }), 'ERR_SOURCE_UNAVAILABLE', 'SourceUnavailableError'],
+    [
+      new SourceUnavailableError('down', { source: 'apkpure', reason: 'http-403' }),
+      'ERR_SOURCE_UNAVAILABLE',
+      'SourceUnavailableError',
+    ],
     [new NetworkError('boom', { url: 'https://x', status: 503 }), 'ERR_NETWORK', 'NetworkError'],
     [new TimeoutError('slow', { url: 'https://x' }), 'ERR_TIMEOUT', 'TimeoutError'],
-    [new ChecksumMismatchError({ algorithm: 'md5', expected: 'a', actual: 'b' }), 'ERR_CHECKSUM', 'ChecksumMismatchError'],
+    [
+      new ChecksumMismatchError({ algorithm: 'md5', expected: 'a', actual: 'b' }),
+      'ERR_CHECKSUM',
+      'ChecksumMismatchError',
+    ],
     [new FileExistsError('/tmp/x.apk'), 'ERR_FILE_EXISTS', 'FileExistsError'],
     [new AbortError(), 'ERR_ABORTED', 'AbortError'],
     [new AllSourcesFailedError('a.b', []), 'ERR_ALL_SOURCES_FAILED', 'AllSourcesFailedError'],
@@ -56,7 +64,10 @@ describe('errors', () => {
     expect(sum.expected).toBe('aa');
     expect(sum.actual).toBe('bb');
 
-    const unavailable = new SourceUnavailableError('x', { source: 'aptoide', reason: 'split-unsupported' });
+    const unavailable = new SourceUnavailableError('x', {
+      source: 'aptoide',
+      reason: 'split-unsupported',
+    });
     expect(unavailable.source).toBe('aptoide');
     expect(unavailable.reason).toBe('split-unsupported');
 

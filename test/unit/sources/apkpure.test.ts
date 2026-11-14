@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { AppNotFoundError, SourceUnavailableError, VersionNotFoundError } from '../../../src/errors.js';
+import {
+  AppNotFoundError,
+  SourceUnavailableError,
+  VersionNotFoundError,
+} from '../../../src/errors.js';
 import { apkpure } from '../../../src/sources/apkpure.js';
 import type { ResolveOptions } from '../../../src/types.js';
 import { fakeHttp, type FakeResponse } from '../../helpers/fake-http.js';
@@ -70,15 +74,21 @@ describe('apkpure source', () => {
 
   it('format apk refuses split apps', async () => {
     const http = fakeHttp([['d.apkpure.com', redirect(SPOTIFY_LATEST)]]);
-    const err = await apkpure.resolve(SPOTIFY, opts(http, { format: 'apk' })).catch((e: unknown) => e);
+    const err = await apkpure
+      .resolve(SPOTIFY, opts(http, { format: 'apk' }))
+      .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(SourceUnavailableError);
     expect((err as SourceUnavailableError).reason).toBe('split-unsupported');
   });
 
   it('format xapk uses the XAPK endpoint and refuses single-APK apps', async () => {
     const http = fakeHttp([['d.apkpure.com', redirect(FDROID_LATEST)]]);
-    const err = await apkpure.resolve(FDROID, opts(http, { format: 'xapk' })).catch((e: unknown) => e);
-    expect(http.calls[0]?.url).toBe('https://d.apkpure.com/b/XAPK/org.fdroid.fdroid?version=latest');
+    const err = await apkpure
+      .resolve(FDROID, opts(http, { format: 'xapk' }))
+      .catch((e: unknown) => e);
+    expect(http.calls[0]?.url).toBe(
+      'https://d.apkpure.com/b/XAPK/org.fdroid.fdroid?version=latest',
+    );
     expect((err as SourceUnavailableError).reason).toBe('format-unavailable');
   });
 
@@ -92,7 +102,9 @@ describe('apkpure source', () => {
   it('resolves a specific versionCode', async () => {
     const http = fakeHttp([['d.apkpure.com', redirect(FDROID_1022050)]]);
     const resolved = await apkpure.resolve(FDROID, opts(http, { version: '1022050' }));
-    expect(http.calls[0]?.url).toBe('https://d.apkpure.com/b/APK/org.fdroid.fdroid?versionCode=1022050');
+    expect(http.calls[0]?.url).toBe(
+      'https://d.apkpure.com/b/APK/org.fdroid.fdroid?versionCode=1022050',
+    );
     expect(resolved.info).toMatchObject({ versionName: '1.22.0', versionCode: 1022050 });
   });
 
@@ -128,7 +140,14 @@ describe('apkpure source', () => {
 
   it('a Cloudflare challenge is reported as blocked', async () => {
     const http = fakeHttp([
-      ['d.apkpure.com', { status: 403, headers: { 'cf-mitigated': 'challenge' }, body: '<title>Just a moment...</title>' }],
+      [
+        'd.apkpure.com',
+        {
+          status: 403,
+          headers: { 'cf-mitigated': 'challenge' },
+          body: '<title>Just a moment...</title>',
+        },
+      ],
     ]);
     const err = await apkpure.resolve(FDROID, opts(http)).catch((e: unknown) => e);
     expect(err).toBeInstanceOf(SourceUnavailableError);

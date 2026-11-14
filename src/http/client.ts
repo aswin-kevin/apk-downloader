@@ -52,7 +52,10 @@ export class HttpClient implements Http {
       } catch (error) {
         if (callerSignal?.aborted) throw new AbortError(undefined, { cause: error });
         const failure = timeoutSignal?.aborted
-          ? new TimeoutError(`Request timed out after ${String(timeout)} ms: ${url}`, { url, cause: error })
+          ? new TimeoutError(`Request timed out after ${String(timeout)} ms: ${url}`, {
+              url,
+              cause: error,
+            })
           : new NetworkError(`Request failed: ${url} (${describe(error)})`, { url, cause: error });
         if (isLast) throw failure;
         await this.backoff(attempt, null, callerSignal);
@@ -63,7 +66,10 @@ export class HttpClient implements Http {
 
       await response.body?.cancel().catch(() => {});
       if (isLast) {
-        throw new NetworkError(`HTTP ${response.status} from ${url}`, { url, status: response.status });
+        throw new NetworkError(`HTTP ${response.status} from ${url}`, {
+          url,
+          status: response.status,
+        });
       }
       await this.backoff(attempt, response.headers.get('retry-after'), callerSignal);
     }
@@ -75,17 +81,28 @@ export class HttpClient implements Http {
     const response = await this.request(url, { ...init, headers });
     if (!response.ok) {
       await response.body?.cancel().catch(() => {});
-      throw new NetworkError(`HTTP ${response.status} from ${url}`, { url, status: response.status });
+      throw new NetworkError(`HTTP ${response.status} from ${url}`, {
+        url,
+        status: response.status,
+      });
     }
     const text = await response.text();
     try {
       return JSON.parse(text) as T;
     } catch (error) {
-      throw new NetworkError(`Invalid JSON from ${url}`, { url, status: response.status, cause: error });
+      throw new NetworkError(`Invalid JSON from ${url}`, {
+        url,
+        status: response.status,
+        cause: error,
+      });
     }
   }
 
-  private async backoff(attempt: number, retryAfter: string | null, signal?: AbortSignal): Promise<void> {
+  private async backoff(
+    attempt: number,
+    retryAfter: string | null,
+    signal?: AbortSignal,
+  ): Promise<void> {
     try {
       await this.sleep(computeBackoff(attempt, retryAfter), signal);
     } catch (error) {
@@ -127,9 +144,7 @@ export function resolveProxy(
   if (explicit) return explicit;
   const target = new URL(url);
   const isHttps = target.protocol === 'https:';
-  const proxy = isHttps
-    ? (env.HTTPS_PROXY ?? env.https_proxy)
-    : (env.HTTP_PROXY ?? env.http_proxy);
+  const proxy = isHttps ? (env.HTTPS_PROXY ?? env.https_proxy) : (env.HTTP_PROXY ?? env.http_proxy);
   if (!proxy) return undefined;
   return bypassesProxy(target.hostname, env.NO_PROXY ?? env.no_proxy) ? undefined : proxy;
 }

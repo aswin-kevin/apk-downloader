@@ -57,7 +57,12 @@ export async function downloadToFile(args: DownloadToFileArgs): Promise<Download
   const touch = () => {
     clearTimeout(idleTimer);
     idleTimer = setTimeout(
-      () => idle.abort(new TimeoutError(`Download stalled for ${idleTimeout} ms: ${resolved.url}`, { url: resolved.url })),
+      () =>
+        idle.abort(
+          new TimeoutError(`Download stalled for ${idleTimeout} ms: ${resolved.url}`, {
+            url: resolved.url,
+          }),
+        ),
       idleTimeout,
     );
   };
@@ -85,10 +90,14 @@ export async function downloadToFile(args: DownloadToFileArgs): Promise<Download
     }
 
     const headerLength = Number(response.headers.get('content-length'));
-    const expectedSize = Number.isSafeInteger(headerLength) && headerLength > 0 ? headerLength : resolved.size;
+    const expectedSize =
+      Number.isSafeInteger(headerLength) && headerLength > 0 ? headerLength : resolved.size;
 
     const inspector = new Inspector({
-      extraAlgorithm: verify && resolved.checksum?.algorithm !== 'sha256' ? resolved.checksum?.algorithm : undefined,
+      extraAlgorithm:
+        verify && resolved.checksum?.algorithm !== 'sha256'
+          ? resolved.checksum?.algorithm
+          : undefined,
       total: expectedSize,
       onChunk: touch,
       onProgress,
@@ -154,13 +163,17 @@ class Inspector extends Transform {
   constructor(private readonly options: InspectorOptions) {
     super();
     this.hashes.set('sha256', createHash('sha256'));
-    if (options.extraAlgorithm) this.hashes.set(options.extraAlgorithm, createHash(options.extraAlgorithm));
+    if (options.extraAlgorithm)
+      this.hashes.set(options.extraAlgorithm, createHash(options.extraAlgorithm));
   }
 
   override _transform(chunk: Buffer, _encoding: BufferEncoding, callback: TransformCallback): void {
     this.options.onChunk();
     if (this.head.length < ZIP_MAGIC.length) {
-      this.head = Buffer.concat([this.head, chunk.subarray(0, ZIP_MAGIC.length - this.head.length)]);
+      this.head = Buffer.concat([
+        this.head,
+        chunk.subarray(0, ZIP_MAGIC.length - this.head.length),
+      ]);
       if (this.head.length === ZIP_MAGIC.length && !this.isZip()) {
         callback(notAnApk(this.options.resolved));
         return;
@@ -212,10 +225,13 @@ class Inspector extends Transform {
 }
 
 function notAnApk(resolved: ResolvedDownload): SourceUnavailableError {
-  return new SourceUnavailableError(`${resolved.source} served something that is not an APK/XAPK file`, {
-    source: resolved.source,
-    reason: 'not-an-apk',
-  });
+  return new SourceUnavailableError(
+    `${resolved.source} served something that is not an APK/XAPK file`,
+    {
+      source: resolved.source,
+      reason: 'not-an-apk',
+    },
+  );
 }
 
 function normalizeError(

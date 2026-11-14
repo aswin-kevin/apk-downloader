@@ -37,7 +37,9 @@ export function renderFileName(template: string, vars: FileNameVars): string {
     key in values ? sanitize(values[key] ?? '') : match,
   );
 
-  let name = sanitize(rendered).replace(/^[.\s]+/, '').replace(/[.\s]+$/, '');
+  let name = sanitize(rendered)
+    .replace(/^[.\s]+/, '')
+    .replace(/[.\s]+$/, '');
   if (name.length === 0) name = FALLBACK;
   return truncate(name);
 }

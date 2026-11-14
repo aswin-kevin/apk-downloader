@@ -44,7 +44,8 @@
   },
   "files": [
     "dist",
-    "bin"
+    "bin",
+    "CHANGELOG.md"
   ],
   "sideEffects": false,
   "engines": {

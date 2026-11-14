@@ -111,7 +111,11 @@ export function createAptoideSource(options: AptoideSourceOptions = {}): Source 
     return body;
   }
 
-  async function getMeta(query: string, packageName: string, opts: LookupOptions): Promise<AptoideApp> {
+  async function getMeta(
+    query: string,
+    packageName: string,
+    opts: LookupOptions,
+  ): Promise<AptoideApp> {
     const body = await call(`${baseUrl}/app/getMeta?${query}`, packageName, opts);
     return validate(body.data);
   }
@@ -125,7 +129,11 @@ export function createAptoideSource(options: AptoideSourceOptions = {}): Source 
   }
 
   async function pickLatest(packageName: string, opts: ResolveOptions): Promise<AptoideApp> {
-    const latest = await getMeta(`package_name=${encodeURIComponent(packageName)}`, packageName, opts);
+    const latest = await getMeta(
+      `package_name=${encodeURIComponent(packageName)}`,
+      packageName,
+      opts,
+    );
     if (isAcceptable(latest.file?.malware?.rank, opts.allowUntrusted)) return latest;
 
     // The newest upload is not trusted: look for the newest one that is.
@@ -133,7 +141,9 @@ export function createAptoideSource(options: AptoideSourceOptions = {}): Source 
       if (error instanceof AppNotFoundError) return [];
       throw error;
     });
-    const candidate = list.find((entry) => isAcceptable(entry.file?.malware?.rank, opts.allowUntrusted));
+    const candidate = list.find((entry) =>
+      isAcceptable(entry.file?.malware?.rank, opts.allowUntrusted),
+    );
     if (candidate?.id === undefined) throw untrusted(packageName);
     return getMeta(`app_id=${candidate.id}`, packageName, opts);
   }
@@ -141,10 +151,14 @@ export function createAptoideSource(options: AptoideSourceOptions = {}): Source 
   async function pickVersion(packageName: string, opts: ResolveOptions): Promise<AptoideApp> {
     const list = await getVersionList(packageName, opts);
     const matches = list.filter(
-      (entry) => entry.file?.vername === opts.version || String(entry.file?.vercode) === opts.version,
+      (entry) =>
+        entry.file?.vername === opts.version || String(entry.file?.vercode) === opts.version,
     );
-    if (matches.length === 0) throw new VersionNotFoundError(packageName, opts.version, { source: ID });
-    const candidate = matches.find((entry) => isAcceptable(entry.file?.malware?.rank, opts.allowUntrusted));
+    if (matches.length === 0)
+      throw new VersionNotFoundError(packageName, opts.version, { source: ID });
+    const candidate = matches.find((entry) =>
+      isAcceptable(entry.file?.malware?.rank, opts.allowUntrusted),
+    );
     if (candidate?.id === undefined) throw untrusted(packageName);
     return getMeta(`app_id=${candidate.id}`, packageName, opts);
   }
@@ -154,7 +168,11 @@ export function createAptoideSource(options: AptoideSourceOptions = {}): Source 
     description: 'Aptoide app store (single APKs, checksums, trust ratings)',
 
     async getInfo(packageName: string, opts: LookupOptions): Promise<AppInfo> {
-      const app = await getMeta(`package_name=${encodeURIComponent(packageName)}`, packageName, opts);
+      const app = await getMeta(
+        `package_name=${encodeURIComponent(packageName)}`,
+        packageName,
+        opts,
+      );
       return toInfo(app);
     },
 
@@ -166,19 +184,28 @@ export function createAptoideSource(options: AptoideSourceOptions = {}): Source 
         });
       }
 
-      const app = opts.version === 'latest' ? await pickLatest(packageName, opts) : await pickVersion(packageName, opts);
+      const app =
+        opts.version === 'latest'
+          ? await pickLatest(packageName, opts)
+          : await pickVersion(packageName, opts);
 
       if (app.obb) {
-        throw new SourceUnavailableError('This app needs OBB expansion files, which Aptoide downloads do not include', {
-          source: ID,
-          reason: 'obb-unsupported',
-        });
+        throw new SourceUnavailableError(
+          'This app needs OBB expansion files, which Aptoide downloads do not include',
+          {
+            source: ID,
+            reason: 'obb-unsupported',
+          },
+        );
       }
       if (app.aab) {
-        throw new SourceUnavailableError('This app is distributed as split APKs, which Aptoide cannot bundle', {
-          source: ID,
-          reason: 'split-unsupported',
-        });
+        throw new SourceUnavailableError(
+          'This app is distributed as split APKs, which Aptoide cannot bundle',
+          {
+            source: ID,
+            reason: 'split-unsupported',
+          },
+        );
       }
 
       const file = app.file as Required<Pick<AptoideFile, 'path'>> & AptoideFile;

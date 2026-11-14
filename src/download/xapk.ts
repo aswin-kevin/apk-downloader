@@ -38,7 +38,9 @@ export async function extractXapk(file: string, destDir: string): Promise<string
     await Promise.all(written.map((f) => rm(f, { force: true }).catch(() => {})));
     if (error instanceof InvalidArchiveError || error instanceof UnsafeArchiveError) throw error;
     const message = error instanceof Error ? error.message : String(error);
-    throw new InvalidArchiveError(`Cannot extract ${path.basename(file)}: ${message}`, { cause: error });
+    throw new InvalidArchiveError(`Cannot extract ${path.basename(file)}: ${message}`, {
+      cause: error,
+    });
   } finally {
     zip.close();
   }
@@ -88,7 +90,11 @@ function listEntries(zip: ZipFile): Promise<Entry[]> {
     zip.once('end', () => resolve(entries));
     zip.once('error', (error: Error) => {
       const unsafe = YAUZL_UNSAFE_NAME.exec(error.message);
-      reject(unsafe ? new UnsafeArchiveError(error.message.split(': ').slice(1).join(': ') || error.message) : error);
+      reject(
+        unsafe
+          ? new UnsafeArchiveError(error.message.split(': ').slice(1).join(': ') || error.message)
+          : error,
+      );
     });
     zip.readEntry();
   });
@@ -96,6 +102,8 @@ function listEntries(zip: ZipFile): Promise<Entry[]> {
 
 function openEntry(zip: ZipFile, entry: Entry): Promise<NodeJS.ReadableStream> {
   return new Promise((resolve, reject) => {
-    zip.openReadStream(entry, (err, stream) => (err || !stream ? reject(err ?? new Error('no stream')) : resolve(stream)));
+    zip.openReadStream(entry, (err, stream) =>
+      err || !stream ? reject(err ?? new Error('no stream')) : resolve(stream),
+    );
   });
 }

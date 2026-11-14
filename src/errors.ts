@@ -57,7 +57,11 @@ export class VersionNotFoundError extends ApkDownloaderError {
 
   constructor(packageName: string, version: string, details: ErrorDetails = {}) {
     const where = details.source ? ` on ${details.source}` : '';
-    super(`Version ${version} of ${packageName} not found${where}`, 'ERR_VERSION_NOT_FOUND', details);
+    super(
+      `Version ${version} of ${packageName} not found${where}`,
+      'ERR_VERSION_NOT_FOUND',
+      details,
+    );
     this.packageName = packageName;
     this.version = version;
   }
@@ -146,7 +150,11 @@ export class UnsafeArchiveError extends ApkDownloaderError {
   readonly entry: string;
 
   constructor(entry: string, details: ErrorDetails = {}) {
-    super(`Refusing to extract unsafe archive entry: ${JSON.stringify(entry)}`, 'ERR_UNSAFE_ARCHIVE', details);
+    super(
+      `Refusing to extract unsafe archive entry: ${JSON.stringify(entry)}`,
+      'ERR_UNSAFE_ARCHIVE',
+      details,
+    );
     this.entry = entry;
   }
 }

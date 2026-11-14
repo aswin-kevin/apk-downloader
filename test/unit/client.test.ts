@@ -16,7 +16,13 @@ import {
   VersionNotFoundError,
 } from '../../src/errors.js';
 import { builtinSources, DEFAULT_INFO_SOURCES, DEFAULT_SOURCES } from '../../src/sources/index.js';
-import type { ApkFormat, AppInfo, ResolvedDownload, ResolveOptions, Source } from '../../src/types.js';
+import type {
+  ApkFormat,
+  AppInfo,
+  ResolvedDownload,
+  ResolveOptions,
+  Source,
+} from '../../src/types.js';
 import { startServer, type TestServer } from '../helpers/server.js';
 import { makeZip } from '../helpers/zip.js';
 
@@ -56,7 +62,10 @@ interface FakeSourceOptions {
   checksum?: ResolvedDownload['checksum'];
 }
 
-function fakeSource(id: string, options: FakeSourceOptions = {}): Source & { calls: ResolveOptions[] } {
+function fakeSource(
+  id: string,
+  options: FakeSourceOptions = {},
+): Source & { calls: ResolveOptions[] } {
   const calls: ResolveOptions[] = [];
   const format = options.format ?? 'apk';
   const info = (pkg: string): AppInfo => ({
@@ -96,9 +105,13 @@ function fakeSource(id: string, options: FakeSourceOptions = {}): Source & { cal
 }
 
 const notFound = (id: string) => new AppNotFoundError(PKG, { source: id });
-const unavailable = (id: string) => new SourceUnavailableError('down', { source: id, reason: 'blocked' });
+const unavailable = (id: string) =>
+  new SourceUnavailableError('down', { source: id, reason: 'blocked' });
 
-function client(sources: Array<string | Source>, extra: ConstructorParameters<typeof ApkDownloader>[0] = {}) {
+function client(
+  sources: Array<string | Source>,
+  extra: ConstructorParameters<typeof ApkDownloader>[0] = {},
+) {
   return new ApkDownloader({ sources, infoSources: sources, retries: 0, timeout: 2000, ...extra });
 }
 
@@ -137,11 +150,19 @@ describe('ApkDownloader.download', () => {
       allowUntrusted: true,
       signal: controller.signal,
     });
-    expect(source.calls[0]).toMatchObject({ version: '2.0', format: 'apk', allowUntrusted: true, signal: controller.signal });
+    expect(source.calls[0]).toMatchObject({
+      version: '2.0',
+      format: 'apk',
+      allowUntrusted: true,
+      signal: controller.signal,
+    });
   });
 
   it('uses the filename template', async () => {
-    const result = await client([fakeSource('one')]).download(PKG, { outDir: dir, fileName: '{source}-{versionCode}.{ext}' });
+    const result = await client([fakeSource('one')]).download(PKG, {
+      outDir: dir,
+      fileName: '{source}-{versionCode}.{ext}',
+    });
     expect(path.basename(result.filePath)).toBe('one-10.apk');
   });
 
@@ -155,14 +176,22 @@ describe('ApkDownloader.download', () => {
   it('falls back when the transfer itself fails with a fallback-eligible error', async () => {
     const broken: Source = {
       ...fakeSource('broken'),
-      resolve: async (pkg) => ({ source: 'broken', url: `${server.url.replace(/:\d+$/, ':1')}/x.apk`, format: 'apk', info: { packageName: pkg, source: 'broken' } }),
+      resolve: async (pkg) => ({
+        source: 'broken',
+        url: `${server.url.replace(/:\d+$/, ':1')}/x.apk`,
+        format: 'apk',
+        info: { packageName: pkg, source: 'broken' },
+      }),
     };
     const result = await client([broken, fakeSource('good')]).download(PKG, { outDir: dir });
     expect(result.source).toBe('good');
   });
 
   it('all not-found → AppNotFoundError', async () => {
-    const err = await client([fakeSource('a', { fail: notFound('a') }), fakeSource('b', { fail: notFound('b') })])
+    const err = await client([
+      fakeSource('a', { fail: notFound('a') }),
+      fakeSource('b', { fail: notFound('b') }),
+    ])
       .download(PKG, { outDir: dir })
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(AppNotFoundError);
@@ -179,7 +208,10 @@ describe('ApkDownloader.download', () => {
   });
 
   it('mixed failures → AllSourcesFailedError with errors[]', async () => {
-    const err = await client([fakeSource('a', { fail: notFound('a') }), fakeSource('b', { fail: unavailable('b') })])
+    const err = await client([
+      fakeSource('a', { fail: notFound('a') }),
+      fakeSource('b', { fail: unavailable('b') }),
+    ])
       .download(PKG, { outDir: dir })
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(AllSourcesFailedError);
@@ -196,14 +228,18 @@ describe('ApkDownloader.download', () => {
   });
 
   it('unknown source id → InvalidOptionError', async () => {
-    await expect(client([fakeSource('one')]).download(PKG, { source: 'nope' })).rejects.toBeInstanceOf(InvalidOptionError);
+    await expect(
+      client([fakeSource('one')]).download(PKG, { source: 'nope' }),
+    ).rejects.toBeInstanceOf(InvalidOptionError);
     expect(() => new ApkDownloader({ sources: ['nope'] })).toThrow(InvalidOptionError);
     expect(() => new ApkDownloader({ sources: [] })).toThrow(InvalidOptionError);
   });
 
   it('invalid package → InvalidPackageError before any request', async () => {
     const source = fakeSource('one');
-    await expect(client([source]).download('not a package', { outDir: dir })).rejects.toBeInstanceOf(InvalidPackageError);
+    await expect(
+      client([source]).download('not a package', { outDir: dir }),
+    ).rejects.toBeInstanceOf(InvalidPackageError);
     expect(source.calls).toHaveLength(0);
   });
 
@@ -228,14 +264,20 @@ describe('ApkDownloader.download', () => {
   it('ifExists overwrite replaces the file', async () => {
     const target = path.join(dir, 'com.example.app-1.0.apk');
     await writeFile(target, 'old');
-    const result = await client([fakeSource('one')]).download(PKG, { outDir: dir, ifExists: 'overwrite' });
+    const result = await client([fakeSource('one')]).download(PKG, {
+      outDir: dir,
+      ifExists: 'overwrite',
+    });
     expect(result.skipped).toBe(false);
     expect((await readFile(target)).equals(APK)).toBe(true);
   });
 
   it('checksum mismatch stops without trying other sources', async () => {
     const second = fakeSource('second');
-    const err = await client([fakeSource('one', { checksum: { algorithm: 'md5', value: '0'.repeat(32) } }), second])
+    const err = await client([
+      fakeSource('one', { checksum: { algorithm: 'md5', value: '0'.repeat(32) } }),
+      second,
+    ])
       .download(PKG, { outDir: dir })
       .catch((e: unknown) => e);
     expect(err).toBeInstanceOf(ChecksumMismatchError);
@@ -246,15 +288,20 @@ describe('ApkDownloader.download', () => {
     const controller = new AbortController();
     controller.abort();
     const second = fakeSource('second');
-    const first = fakeSource('first', { fail: (_p, o) => (o.signal?.aborted ? new AbortError() : undefined) });
-    await expect(client([first, second]).download(PKG, { outDir: dir, signal: controller.signal })).rejects.toBeInstanceOf(
-      AbortError,
-    );
+    const first = fakeSource('first', {
+      fail: (_p, o) => (o.signal?.aborted ? new AbortError() : undefined),
+    });
+    await expect(
+      client([first, second]).download(PKG, { outDir: dir, signal: controller.signal }),
+    ).rejects.toBeInstanceOf(AbortError);
     expect(second.calls).toHaveLength(0);
   });
 
   it('extract:true on xapk returns extractedFiles under <outDir>/<package>/', async () => {
-    const result = await client([fakeSource('one', { format: 'xapk' })]).download(PKG, { outDir: dir, extract: true });
+    const result = await client([fakeSource('one', { format: 'xapk' })]).download(PKG, {
+      outDir: dir,
+      extract: true,
+    });
     expect(result.format).toBe('xapk');
     expect(path.basename(result.filePath)).toBe('com.example.app-1.0.xapk');
     const base = path.join(dir, PKG);
@@ -273,7 +320,9 @@ describe('ApkDownloader.download', () => {
   it('reports progress', async () => {
     const onProgress = vi.fn();
     await client([fakeSource('one')]).download(PKG, { outDir: dir, onProgress });
-    expect(onProgress).toHaveBeenLastCalledWith(expect.objectContaining({ transferred: APK.length }));
+    expect(onProgress).toHaveBeenLastCalledWith(
+      expect.objectContaining({ transferred: APK.length }),
+    );
   });
 });
 
@@ -292,7 +341,10 @@ describe('ApkDownloader.downloadMany', () => {
         return fakeSource('slow').resolve(pkg, opts);
       },
     };
-    const results = await client([slow]).downloadMany(['a.b', 'com.missing.app', 'c.d', 'e.f'], { outDir: dir, concurrency: 2 });
+    const results = await client([slow]).downloadMany(['a.b', 'com.missing.app', 'c.d', 'e.f'], {
+      outDir: dir,
+      concurrency: 2,
+    });
     expect(results.map((r) => [r.packageName, r.ok])).toEqual([
       ['a.b', true],
       ['com.missing.app', false],
@@ -336,7 +388,10 @@ describe('ApkDownloader.getInfo / listVersions', () => {
   it('getInfo uses the info order and falls back', async () => {
     const info = await new ApkDownloader({
       sources: [fakeSource('dl')],
-      infoSources: [fakeSource('first', { fail: unavailable('first') }), fakeSource('second', { version: '3.0' })],
+      infoSources: [
+        fakeSource('first', { fail: unavailable('first') }),
+        fakeSource('second', { version: '3.0' }),
+      ],
     }).getInfo(PKG);
     expect(info).toMatchObject({ source: 'second', versionName: '3.0' });
   });
@@ -347,16 +402,23 @@ describe('ApkDownloader.getInfo / listVersions', () => {
   });
 
   it('getInfo validates the package name', async () => {
-    await expect(client([fakeSource('a')]).getInfo('nope')).rejects.toBeInstanceOf(InvalidPackageError);
+    await expect(client([fakeSource('a')]).getInfo('nope')).rejects.toBeInstanceOf(
+      InvalidPackageError,
+    );
   });
 
   it('listVersions skips sources without it', async () => {
-    const versions = await client([fakeSource('a'), fakeSource('b', { listVersions: true })]).listVersions(PKG);
+    const versions = await client([
+      fakeSource('a'),
+      fakeSource('b', { listVersions: true }),
+    ]).listVersions(PKG);
     expect(versions).toEqual([{ versionName: '1.0', versionCode: 10 }]);
   });
 
   it('listVersions on a pinned source without support → InvalidOptionError', async () => {
-    await expect(client([fakeSource('a')]).listVersions(PKG, { source: 'a' })).rejects.toBeInstanceOf(InvalidOptionError);
+    await expect(
+      client([fakeSource('a')]).listVersions(PKG, { source: 'a' }),
+    ).rejects.toBeInstanceOf(InvalidOptionError);
   });
 });
 
@@ -410,7 +472,9 @@ describe('module exports', () => {
     const api = await import('../../src/index.js');
     const cwd = process.cwd();
     const warn = vi.spyOn(process, 'emitWarning').mockImplementation(() => {});
-    const download = vi.spyOn(api.ApkDownloader.prototype, 'download').mockResolvedValue({} as never);
+    const download = vi
+      .spyOn(api.ApkDownloader.prototype, 'download')
+      .mockResolvedValue({} as never);
     try {
       process.chdir(dir);
       await api.downloadAPK(PKG);

@@ -9,12 +9,20 @@ export interface Style {
   cyan(text: string): string;
 }
 
-const wrap = (open: number, close: number) => (text: string) => `\u001b[${open}m${text}\u001b[${close}m`;
+const wrap = (open: number, close: number) => (text: string) =>
+  `\u001b[${open}m${text}\u001b[${close}m`;
 
 export function createStyle(enabled: boolean): Style {
   const plain = (text: string) => text;
   return enabled
-    ? { bold: wrap(1, 22), dim: wrap(2, 22), green: wrap(32, 39), red: wrap(31, 39), yellow: wrap(33, 39), cyan: wrap(36, 39) }
+    ? {
+        bold: wrap(1, 22),
+        dim: wrap(2, 22),
+        green: wrap(32, 39),
+        red: wrap(31, 39),
+        yellow: wrap(33, 39),
+        cyan: wrap(36, 39),
+      }
     : { bold: plain, dim: plain, green: plain, red: plain, yellow: plain, cyan: plain };
 }
 
@@ -37,7 +45,8 @@ export function serializeError(error: Error): Record<string, unknown> {
     out.code = error.code;
     if (error.source !== undefined) out.source = error.source;
   }
-  if (error instanceof SourceUnavailableError && error.reason !== undefined) out.reason = error.reason;
+  if (error instanceof SourceUnavailableError && error.reason !== undefined)
+    out.reason = error.reason;
   if (error instanceof AllSourcesFailedError) out.errors = error.errors.map(serializeError);
   return out;
 }
