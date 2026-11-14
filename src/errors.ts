@@ -11,7 +11,8 @@ export interface ErrorDetails {
 
 export class ApkDownloaderError extends Error {
   readonly code: string;
-  readonly source?: string;
+  /** Id of the source involved. Filled in by the client when a source did not set it. */
+  source?: string;
 
   constructor(message: string, code: string, details: ErrorDetails = {}) {
     super(message, details.cause === undefined ? undefined : { cause: details.cause });
