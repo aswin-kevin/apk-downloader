@@ -133,6 +133,23 @@ export class AbortError extends ApkDownloaderError {
   }
 }
 
+/** An XAPK archive is corrupt or does not contain any APK. */
+export class InvalidArchiveError extends ApkDownloaderError {
+  constructor(message: string, details: ErrorDetails = {}) {
+    super(message, 'ERR_INVALID_ARCHIVE', details);
+  }
+}
+
+/** An XAPK archive contains an entry that would be written outside the destination ("zip slip"). */
+export class UnsafeArchiveError extends ApkDownloaderError {
+  readonly entry: string;
+
+  constructor(entry: string, details: ErrorDetails = {}) {
+    super(`Refusing to extract unsafe archive entry: ${JSON.stringify(entry)}`, 'ERR_UNSAFE_ARCHIVE', details);
+    this.entry = entry;
+  }
+}
+
 /** Every source was tried and none could serve the request. */
 export class AllSourcesFailedError extends ApkDownloaderError {
   readonly packageName: string;
