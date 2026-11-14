@@ -367,7 +367,7 @@ describe('ApkDownloader.downloadMany', () => {
       },
       onItemDone: (r) => done.push(`${r.packageName}:${r.ok}`),
     });
-    expect([...progress]).toEqual(['a.b', 'com.missing.app']);
+    expect([...progress].sort()).toEqual(['a.b', 'com.missing.app']); // parallel: order varies
     expect(done.sort()).toEqual(['a.b:true', 'com.missing.app:true']);
   });
 
