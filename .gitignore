@@ -5,5 +5,4 @@ coverage/
 *.apk
 *.xapk
 *.part
-.superpowers/
 .DS_Store
