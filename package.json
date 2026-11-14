@@ -40,7 +40,7 @@
     "./package.json": "./package.json"
   },
   "bin": {
-    "apk-downloader": "./bin/apk-downloader.js"
+    "apk-downloader": "bin/apk-downloader.js"
   },
   "files": [
     "dist",
